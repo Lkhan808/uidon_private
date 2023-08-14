@@ -59,13 +59,16 @@ class SignInView(generics.GenericAPIView):
 
         if user is not None:
             tokens = generate_jwt_for_user(user=user)
-            return Response(data={"tokens": tokens, "data": serializer.data}, status=status.HTTP_200_OK)
+            return Response(data={
+                "tokens": tokens,
+                "data": serializer.data,
+                "role": user.role}, status=status.HTTP_200_OK)
         else:
             raise AuthenticationFailed("Неверные учетные данные. Пожалуйста, проверьте логин и пароль.")
 
 
 class ExecutorViewSet(ModelViewSet):
-    permission_classes = [IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
+    # permission_classes = [IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
     filter_backends = [SearchFilter, OrderingFilter]
     search_fields = ['first_name', 'last_name']
     ordering_fields = ['average_rating']
@@ -86,6 +89,7 @@ class ExecutorViewSet(ModelViewSet):
 
 
 class CustomerViewSet(ModelViewSet):
+    # permission_classes = [IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
     queryset = CustomerService.fetch_all()
     filter_backends = [SearchFilter, OrderingFilter]
     search_fields = ['first_name', 'last_name']

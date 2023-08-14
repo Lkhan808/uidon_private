@@ -3,6 +3,7 @@ from rest_framework.validators import UniqueValidator
 from applications.users.constants import ROLE_CHOICES, GENDER_CHOICES, EDUCATION_CHOICES
 from applications.users.models import Skill
 from applications.users.services import UserService, ExecutorService, CustomerService
+from .models import CustomerProfile
 
 executor_unique_validator = UniqueValidator(ExecutorService.fetch_all())
 customer_unique_validator = UniqueValidator(CustomerService.fetch_all())
@@ -48,7 +49,11 @@ class ExecutorValidateSerializer(ExecutorRetrieveSerializer):
 class CustomerSerializer(ExecutorListSerializer):
     pass
 
-
 class CustomerValidateSerializer(ExecutorListSerializer):
     phone = serializers.CharField(validators=[customer_unique_validator])
     location = serializers.CharField(validators=[customer_unique_validator])
+
+    def create(self, validated_data):
+        # Создание новой записи в базе данных с использованием переданных данных
+        customer = CustomerProfile.objects.create(**validated_data)
+        return customer
