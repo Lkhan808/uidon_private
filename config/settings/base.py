@@ -25,8 +25,11 @@ INSTALLED_APPS = [
     'rest_framework',
     'applications.users',
     'applications.order',
+    'rest_framework_simplejwt'
 ]
+
 AUTH_USER_MODEL = 'users.User'
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',

@@ -2,24 +2,23 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework import generics
 from rest_framework.request import Request
-from rest_framework.exceptions import AuthenticationFailed
-
-from .models import CustomerProfile
-from .serializers import (
+from rest_framework.exceptions import AuthenticationFailed, NotFound
+from applications.users.serializers import (
     SignUpSerializer,
     SignInSerializer,
-    ExecutorValidateSerializer,
-    ExecutorRetrieveSerializer,
     ExecutorListSerializer,
+    ExecutorRetrieveSerializer,
+    ExecutorValidateSerializer,
     CustomerSerializer,
     CustomerValidateSerializer
 )
-from .services import UserService, ExecutorService, fetch_all, CustomerService
+from applications.users.services import UserService, ExecutorService, CustomerService
 from django.contrib.auth import authenticate
-from .utils import generate_jwt_for_user
-from rest_framework.permissions import IsAuthenticatedOrReadOnly
-from .permissions import IsOwnerOrReadOnly
+from applications.users.utils import generate_jwt_for_user
+from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
+from applications.users.permissions import IsOwnerOrReadOnly
 from rest_framework.viewsets import ModelViewSet
+from rest_framework.filters import SearchFilter, OrderingFilter
 
 
 class SignUpView(generics.GenericAPIView):
@@ -38,10 +37,15 @@ class SignUpView(generics.GenericAPIView):
 class VerifyEmailView(generics.GenericAPIView):
     def get(self, request: Request, *args, **kwargs):
         user_id = self.kwargs["user_id"]
-        user = UserService.fetch_one(user_id)
+
+        try:
+            user = UserService.fetch_one(user_id)
+        except NotFound:
+            return Response({'msg': 'Пользователь не найден'}, status=status.HTTP_404_NOT_FOUND)
+
         user.is_active = True
         user.save()
-        return Response({'msg': 'Account activated successfully'}, status=status.HTTP_200_OK)
+        return Response({'msg': 'Учетная запись успешно активирована'}, status=status.HTTP_200_OK)
 
 
 class SignInView(generics.GenericAPIView):
@@ -50,25 +54,28 @@ class SignInView(generics.GenericAPIView):
     def post(self, request: Request, *args, **kwargs):
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
+
         user = authenticate(request, **serializer.validated_data)
-        if user:
+
+        if user is not None:
             tokens = generate_jwt_for_user(user=user)
             return Response(data={"tokens": tokens, "data": serializer.data}, status=status.HTTP_200_OK)
-        raise AuthenticationFailed()
+        else:
+            raise AuthenticationFailed("Неверные учетные данные. Пожалуйста, проверьте логин и пароль.")
 
 
 class ExecutorViewSet(ModelViewSet):
-    permission_classes = [
-        IsAuthenticatedOrReadOnly,
-        IsOwnerOrReadOnly,
-    ]
+    permission_classes = [IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
+    filter_backends = [SearchFilter, OrderingFilter]
+    search_fields = ['first_name', 'last_name']
+    ordering_fields = ['average_rating']
 
     def get_queryset(self):
         if self.action == "list":
-            return ExecutorService.executors_list()
+            return ExecutorService.get_executors()
         elif self.action == "retrieve":
-            return ExecutorService.executor_detail()
-        return fetch_all(ExecutorService.model)
+            return ExecutorService.get_executor()
+        return ExecutorService.fetch_all()
 
     def get_serializer_class(self):
         if self.action == "list":
@@ -79,13 +86,12 @@ class ExecutorViewSet(ModelViewSet):
 
 
 class CustomerViewSet(ModelViewSet):
+    queryset = CustomerService.fetch_all()
+    filter_backends = [SearchFilter, OrderingFilter]
+    search_fields = ['first_name', 'last_name']
+    ordering_fields = ['average_rating']
 
     def get_serializer_class(self):
         if self.action in ["list", "retrieve"]:
             return CustomerSerializer
         return CustomerValidateSerializer
-
-    def get_queryset(self):
-        if self.action in ["list", "retrieve"]:
-            return CustomerService.customers_list()
-        return fetch_all(CustomerService.model)

@@ -1,24 +1,15 @@
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
-from .managers import UserManager
-from django.core.validators import RegexValidator, EmailValidator, URLValidator
+from applications.users.constants import ROLE_CHOICES, GENDER_CHOICES, EDUCATION_CHOICES, RATING_CHOICES
+from applications.users.managers import UserManager
 from django.db.models import Count, Avg
 
 
-class User(AbstractBaseUser, PermissionsMixin):
-    email_validator = EmailValidator()
-    ROLE_CHOICES = (
-        ('customer', 'customer'),
-        ('executor', 'executor'),
-    )
 
+class User(AbstractBaseUser, PermissionsMixin):
     is_active = models.BooleanField(default=False)
     is_staff = models.BooleanField(default=False)
-    email = models.EmailField(
-        unique=True,
-        db_index=True,
-        validators=[email_validator]
-    )
+    email = models.EmailField(unique=True,db_index=True,)
     role = models.CharField(max_length=55, choices=ROLE_CHOICES)
     objects = UserManager()
     USERNAME_FIELD = 'email'
@@ -42,19 +33,11 @@ class Skill(models.Model):
 
 class BaseProfile(models.Model):
     user = None
-    phone_regex_validator = RegexValidator(
-        regex=r'^\+(996)(\d{9})$',
-        message='Номер телефона должен быть в формате +код страныXXXXXXXXX',
-    )
-
     first_name = models.CharField(max_length=150)
     last_name = models.CharField(max_length=150)
     avatar = models.ImageField(null=True, blank=True)
     location = models.CharField(unique=True, max_length=150)
-    phone = models.CharField(
-        unique=True,
-        max_length=13,
-        validators=[phone_regex_validator])
+    phone = models.CharField(unique=True, max_length=13)
 
     class Meta:
         abstract = True
@@ -79,17 +62,8 @@ class CustomerProfile(BaseProfile):
 
 class ExecutorProfile(BaseProfile):
     biography = models.TextField()
-    GENDER_CHOICES = (
-        ("Женский", "Женский"),
-        ("Мужской", "Мужской"),
-        ("Не указано", "Не указано"),
-    )
     date_birth = models.DateField()
     gender = models.CharField(choices=GENDER_CHOICES, max_length=20)
-    EDUCATION_CHOICES = (
-        ("Среднее", "Среднее"),
-        ("Высшее", "Высшее"),
-    )
     profession = models.CharField(max_length=150)
     salary = models.DecimalField(max_digits=10, decimal_places=2)
     education_level = models.CharField(max_length=15, choices=EDUCATION_CHOICES)
@@ -129,7 +103,7 @@ class Language(models.Model):
         db_table = "languages"
 
     def __str__(self):
-        return f"{self.executor}----{self.value}"
+        return self.value
 
 
 class Education(models.Model):
@@ -146,7 +120,8 @@ class Education(models.Model):
         db_table = "educations"
 
     def __str__(self):
-        return f"{self.executor} окончил {self.university}"
+        return (f"University: {self.university} Faculty: {self.faculty} "
+                f"Graduation date: {self.graduation_date}")
 
 
 class Contact(models.Model):
@@ -161,17 +136,16 @@ class Contact(models.Model):
         db_table = "contacts"
 
     def __str__(self):
-        return f"Контактная информация {self.executor}"
+        return self.value
 
 
 class Portfolio(models.Model):
-    url_validator = URLValidator()
     executor = models.ForeignKey(
         ExecutorProfile,
         on_delete=models.CASCADE,
         related_name="portfolios"
     )
-    url = models.URLField(validators=[url_validator])
+    url = models.URLField()
 
     class Meta:
         db_table = "portfolios"
@@ -201,7 +175,6 @@ class Review(models.Model):
 
 
 class Rating(models.Model):
-    RATING_CHOICES = ((i, i * '*') for i in range(1, 6))
     grade = models.PositiveSmallIntegerField(choices=RATING_CHOICES)
     customer = models.ForeignKey(
         CustomerProfile,

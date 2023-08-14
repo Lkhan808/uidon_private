@@ -1,6 +1,5 @@
 from django.urls import path
 from rest_framework_simplejwt.views import TokenRefreshView
-from rest_framework.routers import SimpleRouter
 from .views import (
     SignUpView,
     VerifyEmailView,
@@ -8,6 +7,7 @@ from .views import (
     ExecutorViewSet,
     CustomerViewSet
 )
+from rest_framework.routers import SimpleRouter
 
 router = SimpleRouter()
 router.register(r"executors", ExecutorViewSet, basename="executor")

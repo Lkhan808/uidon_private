@@ -1,78 +1,54 @@
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
+from applications.users.constants import ROLE_CHOICES, GENDER_CHOICES, EDUCATION_CHOICES
+from applications.users.models import Skill
+from applications.users.services import UserService, ExecutorService, CustomerService
 
-from applications.users import models
-from applications.users.services import (
-    UserService,
-    ExecutorService,
-    fetch_all,
-    CustomerService
-)
-
-user_unique_validator = UniqueValidator(fetch_all(UserService.model))
-executor_unique_validator = UniqueValidator(fetch_all(ExecutorService.model))
-customer_unique_validator = UniqueValidator(fetch_all(CustomerService.model))
+executor_unique_validator = UniqueValidator(ExecutorService.fetch_all())
+customer_unique_validator = UniqueValidator(CustomerService.fetch_all())
 
 
 class SignInSerializer(serializers.Serializer):
-    email = serializers.EmailField(validators=[
-        UserService.model.email_validator
-    ])
+    email = serializers.EmailField()
     password = serializers.CharField(write_only=True)
 
 
 class SignUpSerializer(serializers.Serializer):
-    email = serializers.EmailField(validators=[
-        user_unique_validator,
-        UserService.model.email_validator
-    ])
+    email = serializers.EmailField(validators=[UniqueValidator(UserService.fetch_all())])
     password = serializers.CharField(write_only=True)
-    role = serializers.ChoiceField(choices=UserService.model.ROLE_CHOICES)
+    role = serializers.ChoiceField(choices=ROLE_CHOICES)
 
 
 class ExecutorListSerializer(serializers.Serializer):
+    avatar = serializers.ImageField()
     id = serializers.IntegerField(read_only=True)
-    avatar = serializers.ImageField(required=False)
     first_name = serializers.CharField()
     last_name = serializers.CharField()
-    profession = serializers.CharField()
 
 
 class ExecutorRetrieveSerializer(ExecutorListSerializer):
-    salary = serializers.DecimalField(max_digits=10, decimal_places=2)
-    education_level = serializers.CharField()
     biography = serializers.CharField()
     date_birth = serializers.DateField()
-    user = serializers.PrimaryKeyRelatedField(read_only=True)
-    gender = serializers.CharField()
-    location = serializers.CharField()
-    phone = serializers.CharField()
-    skills = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
-    educations = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
-    languages = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
-    portfolios = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
-    contacts = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
-    reviews = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
-    average_rating = serializers.FloatField()
+    gender = serializers.ChoiceField(choices=GENDER_CHOICES)
+    profession = serializers.CharField()
+    salary = serializers.DecimalField(max_digits=10, decimal_places=2)
+    education_level = serializers.ChoiceField(EDUCATION_CHOICES)
+    location = serializers.CharField(validators=[executor_unique_validator])
+    phone = serializers.CharField(validators=[executor_unique_validator])
+    contacts = serializers.StringRelatedField(many=True, read_only=True)
+    educations = serializers.StringRelatedField(many=True, read_only=True)
+    languages = serializers.StringRelatedField(many=True, read_only=True)
+    reviews = serializers.StringRelatedField(many=True, read_only=True)
 
 
-class ExecutorValidateSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = models.ExecutorProfile
-        fields = "__all__"
+class ExecutorValidateSerializer(ExecutorRetrieveSerializer):
+    skills = serializers.PrimaryKeyRelatedField(many=True, queryset=Skill.objects.all())
 
 
-class CustomerSerializer(serializers.Serializer):
-    id = serializers.IntegerField()
-    avatar = serializers.ImageField()
-    first_name = serializers.CharField()
-    location = serializers.CharField()
-    last_name = serializers.CharField()
-    phone = serializers.CharField()
-    user = serializers.PrimaryKeyRelatedField(read_only=True)
+class CustomerSerializer(ExecutorListSerializer):
+    pass
 
 
-class CustomerValidateSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = CustomerService.model
-        fields = "__all__"
+class CustomerValidateSerializer(ExecutorListSerializer):
+    phone = serializers.CharField(validators=[customer_unique_validator])
+    location = serializers.CharField(validators=[customer_unique_validator])
