@@ -1,4 +1,7 @@
 from django.core.mail import send_mail
+from rest_framework.exceptions import ValidationError
+
+from applications.users.models import CustomerProfile, ExecutorProfile
 from config.settings import base
 from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
 
@@ -19,3 +22,11 @@ def generate_jwt_for_user(user):
         "access": str(access),
         "refresh": str(refresh)
     }
+
+
+def profile_with_user_exists(user):
+    """
+    Custom validator to check if a profile with the given user already exists.
+    """
+    if ExecutorProfile.objects.filter(user=user).exists() or CustomerProfile.objects.filter(user=user).exists():
+        raise ValidationError("A profile with this user already exists.")

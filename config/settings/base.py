@@ -15,7 +15,6 @@ else:
     from config.settings.development import *
 
 INSTALLED_APPS = [
-    'corsheaders',
     'jazzmin',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -39,8 +38,6 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
-    'django.middleware.common.CommonMiddleware',
 ]
 
 ROOT_URLCONF = 'config.urls'
@@ -144,5 +141,3 @@ EMAIL_HOST_USER = env("EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD")
 BASE_URL = env("BASE_URL")
 EMAIL_USE_SSL = env("EMAIL_USE_SSL", cast=bool)
-
-CORS_ALLOW_ALL_ORIGINS = True

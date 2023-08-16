@@ -4,20 +4,22 @@ from .views import (
     SignUpView,
     VerifyEmailView,
     SignInView,
-    ExecutorViewSet,
-    CustomerViewSet
+    ExecutorListView,
+    ExecutorRetrieveView,
+    CustomerListView,
+    CustomerRetrieveView
 )
-from rest_framework.routers import SimpleRouter
 
-router = SimpleRouter()
-router.register(r"executors", ExecutorViewSet, basename="executor")
-router.register(r"customers", CustomerViewSet, basename="customer")
 
 urlpatterns = [
     path('signup/', SignUpView.as_view(), name='signup'),
     path('verify-email/<int:user_id>/<str:jwt>/', VerifyEmailView.as_view(), name='verify-email'),
     path('signin/', SignInView.as_view(), name='signin'),
     path('token/refresh/', TokenRefreshView.as_view()),
+    path('executors/', ExecutorListView.as_view()),
+    path('executor/<int:pk>/', ExecutorRetrieveView.as_view()),
+    path('customers/', CustomerListView.as_view()),
+    path('customer/<int:pk>/', CustomerRetrieveView.as_view()),
+
 ]
 
-urlpatterns += router.urls

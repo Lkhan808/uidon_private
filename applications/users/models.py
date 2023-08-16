@@ -5,11 +5,10 @@ from applications.users.managers import UserManager
 from django.db.models import Count, Avg
 
 
-
 class User(AbstractBaseUser, PermissionsMixin):
     is_active = models.BooleanField(default=False)
     is_staff = models.BooleanField(default=False)
-    email = models.EmailField(unique=True,db_index=True,)
+    email = models.EmailField(unique=True, db_index=True, )
     role = models.CharField(max_length=55, choices=ROLE_CHOICES)
     objects = UserManager()
     USERNAME_FIELD = 'email'
@@ -36,7 +35,7 @@ class BaseProfile(models.Model):
     first_name = models.CharField(max_length=150)
     last_name = models.CharField(max_length=150)
     avatar = models.ImageField(null=True, blank=True)
-    location = models.CharField(unique=True, max_length=150)
+    location = models.CharField(max_length=150)
     phone = models.CharField(unique=True, max_length=13)
 
     class Meta:
