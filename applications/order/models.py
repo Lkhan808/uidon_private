@@ -17,8 +17,8 @@ class Order(models.Model):
     description = models.TextField()
     payment_method = models.CharField(max_length=10, choices=PaymentMethod.choices, null=True)
     price = models.IntegerField()
-    customer = models.ForeignKey(CustomerProfile, on_delete=models.CASCADE, related_name='orders', null=True)
-    skill = models.ManyToManyField(Skill, related_name='orders')
+    customer = models.ForeignKey(CustomerProfile, on_delete=models.CASCADE, related_name='orders')
+    skill = models.ManyToManyField(Skill)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='new')
 
     def __str__(self):
@@ -31,5 +31,3 @@ class Ordering(models.Model):
 
     def __str__(self):
         return f"Ordering: {self.order} - Executor: {self.executor}"
-
-

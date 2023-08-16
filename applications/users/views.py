@@ -19,7 +19,13 @@ from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticate
 from applications.users.permissions import IsOwnerOrReadOnly
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.filters import SearchFilter, OrderingFilter
+from rest_framework_simplejwt.authentication import JWTAuthentication
+from .models import Skill
+from .serializers import SkillSerializer
 
+class SkillViewSet(ModelViewSet):
+    queryset = Skill.objects.all()
+    serializer_class = SkillSerializer
 
 class SignUpView(generics.GenericAPIView):
     serializer_class = SignUpSerializer
@@ -56,10 +62,16 @@ class SignInView(generics.GenericAPIView):
         serializer.is_valid(raise_exception=True)
 
         user = authenticate(request, **serializer.validated_data)
+        user_id = user.id
 
         if user is not None:
             tokens = generate_jwt_for_user(user=user)
-            return Response(data={"tokens": tokens, "data": serializer.data}, status=status.HTTP_200_OK)
+            return Response(
+                data={"tokens": tokens,
+                      "data": serializer.data,
+                      "role": user.role,
+                      "user": user_id
+                      }, status=status.HTTP_200_OK)
         else:
             raise AuthenticationFailed("Неверные учетные данные. Пожалуйста, проверьте логин и пароль.")
 
@@ -69,7 +81,7 @@ class ExecutorViewSet(ModelViewSet):
     filter_backends = [SearchFilter, OrderingFilter]
     search_fields = ['first_name', 'last_name']
     ordering_fields = ['average_rating']
-
+    authentication_classes = [JWTAuthentication]
     def get_queryset(self):
         if self.action == "list":
             return ExecutorService.get_executors()
@@ -90,8 +102,11 @@ class CustomerViewSet(ModelViewSet):
     filter_backends = [SearchFilter, OrderingFilter]
     search_fields = ['first_name', 'last_name']
     ordering_fields = ['average_rating']
+    permission_classes = [IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
+    authentication_classes = [JWTAuthentication]
 
     def get_serializer_class(self):
         if self.action in ["list", "retrieve"]:
             return CustomerSerializer
         return CustomerValidateSerializer
+

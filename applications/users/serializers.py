@@ -63,7 +63,7 @@ class CustomerSerializer(ExecutorListSerializer):
 
 
 class CustomerValidateSerializer(ExecutorListSerializer):
-    phone = serializers.CharField(validators=[customer_unique_validator])
+    phone = serializers.CharField(validators=[customer_unique_validator, executor_unique_validator])
     location = serializers.CharField()
     user = serializers.PrimaryKeyRelatedField(
         queryset=UserService.fetch_all(),
@@ -71,10 +71,17 @@ class CustomerValidateSerializer(ExecutorListSerializer):
     )
 
     def create(self, validated_data):
-        user = validated_data["user"]
         customer = CustomerService.create_profile(validated_data)
         return customer
 
     def update(self, instance, validated_data):
         customer = CustomerService.update_profile(instance, validated_data)
         return customer
+
+
+
+class SkillSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Skill
+        fields = '__all__'
+
