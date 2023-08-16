@@ -15,17 +15,11 @@ from applications.users.serializers import (
 from applications.users.services import UserService, ExecutorService, CustomerService
 from django.contrib.auth import authenticate
 from applications.users.utils import generate_jwt_for_user
-from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
+from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from applications.users.permissions import IsOwnerOrReadOnly
-from rest_framework.viewsets import ModelViewSet
 from rest_framework.filters import SearchFilter, OrderingFilter
 from rest_framework_simplejwt.authentication import JWTAuthentication
-from .models import Skill
-from .serializers import SkillSerializer
 
-class SkillViewSet(ModelViewSet):
-    queryset = Skill.objects.all()
-    serializer_class = SkillSerializer
 
 class SignUpView(generics.GenericAPIView):
     serializer_class = SignUpSerializer
@@ -62,51 +56,56 @@ class SignInView(generics.GenericAPIView):
         serializer.is_valid(raise_exception=True)
 
         user = authenticate(request, **serializer.validated_data)
-        user_id = user.id
 
         if user is not None:
             tokens = generate_jwt_for_user(user=user)
-            return Response(
-                data={"tokens": tokens,
-                      "data": serializer.data,
-                      "role": user.role,
-                      "user": user_id
-                      }, status=status.HTTP_200_OK)
+            return Response(data={"tokens": tokens, "data": serializer.data}, status=status.HTTP_200_OK)
         else:
             raise AuthenticationFailed("Неверные учетные данные. Пожалуйста, проверьте логин и пароль.")
 
 
-class ExecutorViewSet(ModelViewSet):
-    permission_classes = [IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
+class ExecutorListView(generics.ListCreateAPIView):
+    permission_classes = [IsAuthenticatedOrReadOnly]
+    queryset = ExecutorService.get_executors()
     filter_backends = [SearchFilter, OrderingFilter]
     search_fields = ['first_name', 'last_name']
     ordering_fields = ['average_rating']
     authentication_classes = [JWTAuthentication]
-    def get_queryset(self):
-        if self.action == "list":
-            return ExecutorService.get_executors()
-        elif self.action == "retrieve":
-            return ExecutorService.get_executor()
-        return ExecutorService.fetch_all()
 
     def get_serializer_class(self):
-        if self.action == "list":
+        if self.request.method == "GET":
             return ExecutorListSerializer
-        elif self.action == "retrieve":
+        return ExecutorValidateSerializer
+
+
+class ExecutorRetrieveView(generics.RetrieveUpdateDestroyAPIView):
+    permission_classes = [IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
+    queryset = ExecutorService.get_executor()
+    authentication_classes = [JWTAuthentication]
+
+    def get_serializer_class(self):
+        if self.request.method == "GET":
             return ExecutorRetrieveSerializer
         return ExecutorValidateSerializer
 
 
-class CustomerViewSet(ModelViewSet):
+class CustomerListView(generics.ListCreateAPIView):
+    permission_classes = [IsAuthenticatedOrReadOnly]
     queryset = CustomerService.fetch_all()
-    filter_backends = [SearchFilter, OrderingFilter]
-    search_fields = ['first_name', 'last_name']
-    ordering_fields = ['average_rating']
-    permission_classes = [IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
     authentication_classes = [JWTAuthentication]
 
     def get_serializer_class(self):
-        if self.action in ["list", "retrieve"]:
+        if self.request.method == "GET":
             return CustomerSerializer
         return CustomerValidateSerializer
 
+
+class CustomerRetrieveView(generics.RetrieveUpdateDestroyAPIView):
+    permission_classes = [IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
+    queryset = CustomerService.fetch_all()
+    authentication_classes = [JWTAuthentication]
+
+    def get_serializer_class(self):
+        if self.request.method == "GET":
+            return CustomerSerializer
+        return CustomerValidateSerializer

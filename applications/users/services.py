@@ -18,14 +18,6 @@ class BaseService:
     def fetch_all(cls):
         return cls.model.objects.all()
 
-    @classmethod
-    def create_profile(cls, data):
-        pass
-
-    @classmethod
-    def update_profile(cls, instance, data):
-        pass
-
 
 class UserService(BaseService):
     model = User
@@ -52,36 +44,6 @@ class ExecutorService(BaseService):
         queryset = cls.fetch_all()
         return queryset.prefetch_related(*prefetch_list).select_related("user")
 
-    @classmethod
-    def create_profile(cls, data):
-        skills = data.pop("skills", [])
-        executor = cls.model.objects.create(**data)
-        executor.skills.set(skills)
-        executor.save()
-        return executor
-
-    @classmethod
-    def update_profile(cls, instance, data):
-        skills = data.pop("skills", [])
-        for attr, value in data.items():
-            setattr(instance, attr, value)
-        instance.skills.set(skills)
-        instance.save()
-        return instance
-
 
 class CustomerService(BaseService):
     model = CustomerProfile
-
-    @classmethod
-    def create_profile(cls, data):
-        customer = cls.model.objects.create(**data)
-        customer.save()
-        return customer
-
-    @classmethod
-    def update_profile(cls, instance, data):
-        for attr, value in data.items():
-            setattr(instance, attr, value)
-        instance.save()
-        return instance
