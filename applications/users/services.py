@@ -1,49 +1,33 @@
-from django.db.models import Model, Prefetch, QuerySet
-from applications.users.models import User, ExecutorProfile, CustomerProfile
-from applications.users.utils import send_mail_for_user, generate_jwt_for_user
-from rest_framework.exceptions import NotFound
+from applications.users.models import User
+from config.settings import base
+from django.core.mail import send_mail
+from applications.users.utils import generate_confirmation_code
+from rest_framework.exceptions import ValidationError
 
 
-class BaseService:
-    model: Model
-
-    @classmethod
-    def fetch_one(cls, pk: int):
-        try:
-            return cls.model.objects.get(pk=pk)
-        except cls.model.DoesNotExist:
-            raise NotFound()
-
-    @classmethod
-    def fetch_all(cls):
-        return cls.model.objects.all()
+def send_email_verification(data):
+    user = User.objects.create_user(**data)
+    user.confirmation_code = generate_confirmation_code()
+    user.save()
+    subject = 'Подтвердите свой EMAIL'
+    message = (f'На почту отправлен 6-значный код:'
+               f'\n{base.BASE_URL}api/auth/verify-email/')
+    from_email = base.EMAIL_HOST_USER
+    recipient_list = [user.email]
+    send_mail(subject, message, from_email, recipient_list)
 
 
-class UserService(BaseService):
-    model = User
-
-    @classmethod
-    def send_mail_sign_up(cls, validated_data):
-        user = cls.model.objects.create_user(**validated_data)
-        jwt = generate_jwt_for_user(user)
-        send_mail_for_user(user, jwt)
+def get_all_users():
+    return User.objects.all()
 
 
-class ExecutorService(BaseService):
-    model = ExecutorProfile
-
-    @classmethod
-    def get_executors(cls) -> QuerySet[Model]:
-        queryset = cls.fetch_all().prefetch_related("skills")
-        return queryset.only("id", "avatar", "profession", "last_name", "first_name")
-
-    @classmethod
-    def get_executor(cls) -> QuerySet[Model]:
-        prefetch_list = ["skills", "portfolios", "contacts",
-                         "languages", "educations", "reviews", "ratings"]
-        queryset = cls.fetch_all()
-        return queryset.prefetch_related(*prefetch_list).select_related("user")
-
-
-class CustomerService(BaseService):
-    model = CustomerProfile
+def verify_email(confirmation_code):
+    try:
+        user = User.objects.get(confirmation_code=confirmation_code)
+        if not user.is_active:
+            user.is_active = True
+            user.save()
+            return user
+        raise ValidationError("User is already active")
+    except User.DoesNotExist:
+        raise ValidationError("User not found")

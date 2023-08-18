@@ -1,25 +1,11 @@
 from django.urls import path
 from rest_framework_simplejwt.views import TokenRefreshView
-from .views import (
-    SignUpView,
-    VerifyEmailView,
-    SignInView,
-    ExecutorListView,
-    ExecutorRetrieveView,
-    CustomerListView,
-    CustomerRetrieveView
-)
-
+from .views import sign_up_view, verify_email_view, sign_in_view
 
 urlpatterns = [
-    path('signup/', SignUpView.as_view(), name='signup'),
-    path('verify-email/<int:user_id>/<str:jwt>/', VerifyEmailView.as_view(), name='verify-email'),
-    path('signin/', SignInView.as_view(), name='signin'),
+    path('sign-up/', sign_up_view),
+    path('verify-email/', verify_email_view),
+    path('sign-in/', sign_in_view),
     path('token/refresh/', TokenRefreshView.as_view()),
-    path('executors/', ExecutorListView.as_view()),
-    path('executor/<int:pk>/', ExecutorRetrieveView.as_view()),
-    path('customers/', CustomerListView.as_view()),
-    path('customer/<int:pk>/', CustomerRetrieveView.as_view()),
-
 ]
 
