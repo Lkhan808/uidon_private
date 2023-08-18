@@ -1,77 +1,88 @@
-from rest_framework import generics
-from rest_framework.response import Response
 from rest_framework import status
-from .models import Order, Ordering
-from .serializers import (
-    OrderSerializer,
-    OrderingSerializer,
-    OrderResponseSerializer,
-    OrderChooseExecutorSerializer
-)
-from applications.users.models import ExecutorProfile
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from .models import Order, OrderResponse
+from .serializers import OrderSerializer, OrderResponseSerializer
+from ..users.models import ExecutorProfile
+from .decorators import require_executor
 
-
-class OrderListView(generics.ListCreateAPIView):
-    queryset = Order.objects.all()
-    serializer_class = OrderSerializer
-
-class OrderDetailView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Order.objects.all()
-    serializer_class = OrderSerializer
-
-class OrderApplyView(generics.CreateAPIView):
-    queryset = Order.objects.all()
-    serializer_class = OrderSerializer
-
-class OrderAppliedListView(generics.ListAPIView):
-    queryset = Ordering.objects.all()
-    serializer_class = OrderingSerializer
-
-class OrderChooseExecutorView(generics.CreateAPIView):
-    queryset = Order.objects.all()
-    serializer_class = OrderChooseExecutorSerializer
-
-    def create(self, request, *args, **kwargs):
-        executor_id = request.data.get("executor_id")
-        order_id = request.data.get("order_id")
-
-        if executor_id is None or order_id is None:
-            return Response({"error": "executor_id and order_id are required"}, status=status.HTTP_400_BAD_REQUEST)
-
-        try:
-            executor = ExecutorProfile.objects.get(pk=executor_id)
-            order = Order.objects.get(pk=order_id)
-        except ExecutorProfile.DoesNotExist:
-            return Response({"error": "Executor not found"}, status=status.HTTP_400_BAD_REQUEST)
-        except Order.DoesNotExist:
-            return Response({"error": "Order not found"}, status=status.HTTP_400_BAD_REQUEST)
-
-        order.status = "in_progress"
+@api_view(['POST'])
+def create_order(request):
+    serializer = OrderSerializer(data=request.data)
+    if serializer.is_valid():
+        skill = serializer.validated_data.pop('skill')
+        order = Order.objects.create(**serializer.validated_data)
+        order.skill.set(skill)
         order.save()
+        return Response(OrderSerializer(order).data, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-        Ordering.objects.create(order=order, executor=executor, attached=True)
+@api_view(['GET'])
+def list_orders(request):
+    orders = Order.objects.all()
+    serializer = OrderSerializer(orders, many=True)
+    return Response(serializer.data)
 
-        return Response({"message": "Executor has been chosen for the order and order status updated"},
-                        status=status.HTTP_200_OK)
+@api_view(['GET'])
+def order_detail(request, order_id):
+    try:
+        order = Order.objects.get(pk=order_id)
+    except Order.DoesNotExist:
+        return Response({'error': 'Заказ не найден'}, status=status.HTTP_404_NOT_FOUND)
+
+    serializer = OrderSerializer(order)
+    return Response(serializer.data)
+
+@api_view(['POST'])
+@require_executor
+def create_order_response(request):
+    order_id = request.data.get('order_id')
+    executor_id = request.data.get('executor_id')
+
+    if not order_id or not executor_id:
+        return Response({'message': 'Идентификатор заказа и исполнителя обязательны'},
+                        status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        order = Order.objects.get(pk=order_id)
+        executor = ExecutorProfile.objects.get(pk=executor_id)
+    except (Order.DoesNotExist, ExecutorProfile.DoesNotExist):
+        return Response({'message': 'Заказ или исполнитель не найдены'}, status=status.HTTP_404_NOT_FOUND)
+
+    response = OrderResponse.objects.create(order=order, executor=executor)
+    return Response({'message': 'Отклик успешно создан'}, status=status.HTTP_201_CREATED)
 
 
-class OrderResponseView(generics.CreateAPIView):
-    serializer_class = OrderResponseSerializer
+@api_view(['GET'])
+def list_responses_for_order(request, order_id):
+    order = Order.objects.get(pk=order_id)
+    responses = order.orderings.all()
+    serializer = OrderResponseSerializer(responses, many=True)
+    return Response(serializer.data)
 
-    def create(self, request, *args, **kwargs):
-        order_id = request.data.get("order_id")
-        executor_id = request.data.get("executor_id")
 
-        try:
-            order = Order.objects.get(pk=order_id)
-        except Order.DoesNotExist:
-            return Response({"error": "Order not found"}, status=status.HTTP_400_BAD_REQUEST)
+@api_view(['PUT'])
+def assign_executor_to_order(request, order_id):
+    order = Order.objects.get(pk=order_id)
+    executor_id = request.data.get('executor_id')
+    if not executor_id:
+        return Response({'error': 'Не указан ID исполнителя'}, status=status.HTTP_400_BAD_REQUEST)
 
-        try:
-            executor = ExecutorProfile.objects.get(pk=executor_id)
-        except ExecutorProfile.DoesNotExist:
-            return Response({"error": "Executor not found"}, status=status.HTTP_400_BAD_REQUEST)
+    try:
+        executor = ExecutorProfile.objects.get(id=executor_id)
+    except ExecutorProfile.DoesNotExist:
+        return Response({'error': 'Исполнитель с указанным ID не найден'}, status=status.HTTP_404_NOT_FOUND)
 
-        response = Ordering.objects.create(order=order, executor=executor, attached=False)
+    order.executor = executor
+    order.status = 'в работе'
+    order.save()
+    return Response({'message': 'Исполнитель назначен на заказ'})
 
-        return Response({"message": "Response to order created", "response_id": response.id}, status=status.HTTP_201_CREATED)
+
+@api_view(['POST'])
+def leave_order_review(request, order_response_id):
+    response = OrderResponse.objects.get(pk=order_response_id)
+    review_text = request.data.get('review_text')
+    # Создайте модель отзыва и свяжите его с заказом, исполнителем и текстом отзыва
+    # order_review = OrderReview.objects.create(order=response.order, executor=response.executor, review_text=review_text)
+    return Response({'message': 'Отзыв успешно оставлен'}, status=status.HTTP_201_CREATED)

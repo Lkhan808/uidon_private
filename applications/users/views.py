@@ -56,10 +56,11 @@ class SignInView(generics.GenericAPIView):
         serializer.is_valid(raise_exception=True)
 
         user = authenticate(request, **serializer.validated_data)
+        user_id = user.id
 
         if user is not None:
             tokens = generate_jwt_for_user(user=user)
-            return Response(data={"tokens": tokens, "data": serializer.data}, status=status.HTTP_200_OK)
+            return Response(data={"tokens": tokens, "data": serializer.data, "user_id": user_id, "role": user.role}, status=status.HTTP_200_OK)
         else:
             raise AuthenticationFailed("Неверные учетные данные. Пожалуйста, проверьте логин и пароль.")
 
