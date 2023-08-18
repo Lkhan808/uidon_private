@@ -1,13 +1,16 @@
 from django.contrib import admin
 from django.urls import path, include
-from rest_framework.documentation import include_docs_urls
 from django.conf.urls.static import static, settings
+from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/', include("applications.users.urls")),
-    path('api/docs/', include_docs_urls(title="Snippet")),
-    path('api/', include("applications.order.urls")),
+    path('api/auth/', include("applications.users.urls")),
+    path('api/profiles/', include("applications.profiles.urls")),
+    path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
+    path('api/schema/swagger-ui/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
+    path('api/schema/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
+    # path('api/', include("applications.orders.urls")),
 ]
 
 urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

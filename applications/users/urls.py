@@ -1,23 +1,11 @@
 from django.urls import path
 from rest_framework_simplejwt.views import TokenRefreshView
-from .views import (
-    SignUpView,
-    VerifyEmailView,
-    SignInView,
-    ExecutorViewSet,
-    CustomerViewSet
-)
-from rest_framework.routers import SimpleRouter
-
-router = SimpleRouter()
-router.register(r"executors", ExecutorViewSet, basename="executor")
-router.register(r"customers", CustomerViewSet, basename="customer")
+from .views import sign_up_view, verify_email_view, sign_in_view
 
 urlpatterns = [
-    path('signup/', SignUpView.as_view(), name='signup'),
-    path('verify-email/<int:user_id>/<str:jwt>/', VerifyEmailView.as_view(), name='verify-email'),
-    path('signin/', SignInView.as_view(), name='signin'),
+    path('sign-up/', sign_up_view),
+    path('verify-email/', verify_email_view),
+    path('sign-in/', sign_in_view),
     path('token/refresh/', TokenRefreshView.as_view()),
 ]
 
-urlpatterns += router.urls

@@ -42,4 +42,4 @@ class OrderChooseExecutorView(generics.UpdateAPIView):
 
         Ordering.objects.create(order=instance, executor=executor, attached=True)
 
-        return Response({"message": "Executor has been chosen and order status updated"}, status=status.HTTP_200_OK)
+        return Response({"message": "Executor has been chosen and orders status updated"}, status=status.HTTP_200_OK)
