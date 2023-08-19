@@ -3,7 +3,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from .models import Order, OrderResponse
 from .serializers import OrderSerializer, OrderResponseSerializer
-from ..users.models import ExecutorProfile
+from applications.profiles.models import ExecutorProfile
 from .decorators import require_executor
 
 @api_view(['POST'])

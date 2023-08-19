@@ -1,5 +1,6 @@
 from django.db import models
-from applications.users.models import CustomerProfile, ExecutorProfile, Skill
+from applications.profiles.models import ExecutorProfile, CustomerProfile
+from applications.qualifications.models import Skill
 
 
 class Order(models.Model):

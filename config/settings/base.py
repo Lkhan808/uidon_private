@@ -23,7 +23,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'applications.users',
-    # 'applications.orders',
+    'applications.orders',
     'applications.profiles',
     # 'applications.feedbacks',
     'applications.qualifications',
