@@ -12,7 +12,6 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_staff = models.BooleanField(default=False)
     email = models.EmailField(unique=True, db_index=True)
     role = models.CharField(max_length=55, choices=ROLE_CHOICES)
-    confirmation_code = models.CharField(max_length=6, null=True, blank=True, editable=False)
     objects = UserManager()
     USERNAME_FIELD = 'email'
 

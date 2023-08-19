@@ -19,6 +19,3 @@ class SignUpSerializer(UserSerializer):
     email = serializers.EmailField(validators=[UniqueValidator(get_all_users())])
     role = serializers.ChoiceField(choices=User.ROLE_CHOICES)
 
-
-class VerificationEmailSerializer(serializers.Serializer):
-    confirmation_code = serializers.CharField(write_only=True, min_length=6, max_length=6)
