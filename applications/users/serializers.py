@@ -17,3 +17,9 @@ class SignInSerializer(UserSerializer):
 class SignUpSerializer(UserSerializer):
     email = serializers.EmailField(validators=[UniqueValidator(User.objects.all())])
     role = serializers.ChoiceField(choices=User.ROLE_CHOICES)
+
+
+class PasswordResetSerializer(serializers.Serializer):
+    uid = serializers.CharField()
+    token = serializers.CharField()
+    new_password = serializers.CharField(write_only=True)
