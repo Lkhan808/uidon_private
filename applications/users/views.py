@@ -52,5 +52,5 @@ def sign_in_view(request: Request):
             tokens = generate_jwt_for_user(user)
             return Response(data={"tokens": tokens, "user-data": UserSerializer(user).data}, status=status.HTTP_200_OK)
         else:
-            return Response(data={"Чел аккаунт не активный"}, status=status.HTTP_403_FORBIDDEN)
+            return Response(data={"аккаунт не активный"}, status=status.HTTP_403_FORBIDDEN)
     return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
