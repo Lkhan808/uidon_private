@@ -3,6 +3,7 @@ from config.settings import base
 from django.core.mail import send_mail
 from applications.users.utils import generate_jwt_for_user
 from rest_framework.exceptions import ValidationError
+from rest_framework.generics import get_object_or_404
 
 
 def send_email_verification(data):

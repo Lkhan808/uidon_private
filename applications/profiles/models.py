@@ -1,6 +1,7 @@
 from applications.qualifications.models import Skill
 from applications.users.models import User
 from django.db import models
+from django.db.models import Count, Avg
 
 
 class BaseProfile(models.Model):
@@ -58,3 +59,11 @@ class ExecutorProfile(BaseProfile):
 
     class Meta:
         db_table = 'executors'
+
+    @property
+    def reviews_count(self):
+        return self.reviews.all().aggregate(value=Count("id"))["value"]
+
+    @property
+    def average_rating(self):
+        return self.ratings.all().aggregate(value=Avg("grade"))["value"]

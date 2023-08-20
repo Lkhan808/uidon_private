@@ -25,7 +25,7 @@ INSTALLED_APPS = [
     'applications.users',
     'applications.orders',
     'applications.profiles',
-    # 'applications.feedbacks',
+    'applications.feedbacks',
     'applications.qualifications',
     'rest_framework_simplejwt',
     'drf_spectacular',
