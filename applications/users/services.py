@@ -1,33 +1,38 @@
-from applications.users.models import User
-from config.settings import base
-from django.core.mail import send_mail
-from applications.users.utils import generate_jwt_for_user
-from rest_framework.exceptions import ValidationError
-from rest_framework.generics import get_object_or_404
+from applications.users import models
+from applications.users.utils import generate_jwt_for_user, send_mail_for_user, send_mail_reset_password
+from rest_framework.exceptions import NotFound
+from django.db.models import Model
 
 
-def send_email_verification(data):
-    user = User.objects.create_user(**data)
-    tokens = generate_jwt_for_user(user)
-    user.save()
-    subject = 'Подтвердите свой EMAIL'
-    message = f'\n{base.BASE_URL}api/auth/verify-email/{user.id}/{tokens["access"]}'
-    from_email = base.EMAIL_HOST_USER
-    recipient_list = [user.email]
-    send_mail(subject, message, from_email, recipient_list)
+class BaseService:
+    model: Model
+
+    @classmethod
+    def fetch_one(cls, pk):
+        try:
+            return cls.model.objects.get(pk=pk)
+        except cls.model.DoesNotExist:
+            raise NotFound
 
 
-def get_all_users():
-    return User.objects.all()
+class UserService(BaseService):
+    model = models.User
 
+    @classmethod
+    def send_mail_sign_up(cls, validated_data):
+        user = cls.model.objects.create_user(**validated_data)
+        jwt = generate_jwt_for_user(user)
+        send_mail_for_user(user, jwt)
 
-def verify_email(user_id):
-    try:
-        user = User.objects.get()
-        if not user.is_active:
-            user.is_active = True
-            user.save()
-            return user
-        raise ValidationError("User is already active")
-    except User.DoesNotExist:
-        raise ValidationError("User not found")
+    @classmethod
+    def send_mail_reset(cls, email):
+        user = cls.model.objects.get(email=email)
+        send_mail_reset_password(user=user)
+
+    # @classmethod
+    # def get_user_info_from_google(cls, token, refresh_token):
+    #     payload = {"access_token": token, "refresh_token": refresh_token}
+    #     user_info = requests.get(
+    #         "https://www.googleapis.com/oauth2/v2/userinfo", params=payload
+    #     )
+    #     return json.loads(user_info.text)
