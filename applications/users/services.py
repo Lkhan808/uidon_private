@@ -3,6 +3,7 @@ from config.settings import base
 from django.core.mail import send_mail
 from applications.users.utils import generate_jwt_for_user
 from rest_framework.exceptions import ValidationError
+from rest_framework.generics import get_object_or_404
 
 
 def send_email_verification(data):
@@ -16,17 +17,10 @@ def send_email_verification(data):
     send_mail(subject, message, from_email, recipient_list)
 
 
-def get_all_users():
-    return User.objects.all()
-
-
 def verify_email(user_id):
-    try:
-        user = User.objects.get()
-        if not user.is_active:
-            user.is_active = True
-            user.save()
-            return user
-        raise ValidationError("User is already active")
-    except User.DoesNotExist:
-        raise ValidationError("User not found")
+    user = get_object_or_404(User, pk=user_id)
+    if not user.is_active:
+        user.is_active = True
+        user.save()
+        return user
+    raise ValidationError("User is already active")

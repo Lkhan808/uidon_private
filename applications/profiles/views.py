@@ -1,49 +1,68 @@
-from drf_spectacular.views import extend_schema
 from rest_framework import status
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.request import Request
 from rest_framework.response import Response
-from applications.profiles.serializers import ExecutorListSerializer, ExecutorCreateSerializer, \
-    ExecutorRetrieveSerializer, ExecutorUpdateSerializer
-from applications.profiles.services import get_all_executors, create_executor, get_executor
+from applications.profiles.models import ExecutorProfile, CustomerProfile
+from applications.profiles.serializers import ExecutorSerializer, CustomerSerializer
 
 
-@extend_schema(request=ExecutorListSerializer, responses={200: ExecutorListSerializer})
-@api_view(["GET"])
-def get_executors_view(request: Request):
+@api_view(["GET", "POST"])
+def executors_list_view(request: Request):
+    """ Создание или список фрилансеров """
     if request.method == "GET":
-        executors = get_all_executors()
-        serializer = ExecutorListSerializer(executors, many=True)
+        executors = ExecutorProfile.objects.all()
+        serializer = ExecutorSerializer(executors, many=True)
         return Response(data=serializer.data, status=status.HTTP_200_OK)
-    return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
-
-
-@extend_schema(request=ExecutorCreateSerializer, responses={201: ExecutorCreateSerializer})
-@api_view(["POST"])
-def create_executor_view(request: Request):
-    if request.method == "POST":
-        serializer = ExecutorCreateSerializer(data=request.data)
+    else:
+        serializer = ExecutorSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        executor = create_executor(serializer.validated_data)
-        return Response(data=ExecutorListSerializer(executor).data, status=status.HTTP_201_CREATED)
-    return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+        serializer.save()
+        return Response(data=serializer.data, status=status.HTTP_201_CREATED)
 
 
-@extend_schema(request=ExecutorRetrieveSerializer, responses={200: ExecutorRetrieveSerializer})
-@api_view(["GET"])
-def get_executor_view(request: Request, pk: int):
+@api_view(["GET", "DELETE", "PUT"])
+def executor_detail_view(request: Request, pk):
+    """ Детальный просмотр, удаление, изменение фрилансера """
+    executor = ExecutorProfile.objects.get(pk=pk)
     if request.method == "GET":
-        executor = get_executor(pk=pk)
-        serializer = ExecutorRetrieveSerializer(executor)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-    return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
-
-
-@extend_schema(request=None, responses={204: None})
-@api_view(["DELETE"])
-def delete_executor_view(request: Request, pk: int):
-    if request.method == "DELETE":
-        executor = get_executor(pk=pk)
+        serializer = ExecutorSerializer(executor)
+        return Response(data=serializer.data, status=status.HTTP_200_OK)
+    elif request.method == "PUT":
+        serializer = ExecutorSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(data=serializer.data, status=status.HTTP_200_OK)
+    else:
         executor.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
-    return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+
+@api_view(["GET", "POST"])
+def customers_list_view(request: Request):
+    """ Создание или список заказчиков """
+    if request.method == "GET":
+        customers = CustomerProfile.objects.all()
+        serializer = CustomerSerializer(customers, many=True)
+        return Response(data=serializer.data, status=status.HTTP_200_OK)
+    else:
+        serializer = ExecutorSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(data=serializer.data, status=status.HTTP_201_CREATED)
+
+
+@api_view(["GET", "DELETE", "PUT"])
+def customer_detail_view(request: Request, pk):
+    """ Детальный просмотр, удаление, изменение фрилансера """
+    customer = CustomerProfile.objects.get(pk=pk)
+    if request.method == "GET":
+        serializer = ExecutorSerializer(customer)
+        return Response(data=serializer.data, status=status.HTTP_200_OK)
+    elif request.method == "PUT":
+        serializer = CustomerSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(data=serializer.data, status=status.HTTP_200_OK)
+    else:
+        customer.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)

@@ -19,7 +19,7 @@ class Review(models.Model):
         db_table = 'reviews'
 
     def __str__(self):
-        return f"Заказчик: {self.customer} оставил отзыв {self.executor}"
+        return self.customer
 
 
 class Rating(models.Model):

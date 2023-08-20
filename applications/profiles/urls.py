@@ -1,9 +1,10 @@
 from django.urls import path
-from applications.profiles import views
+from applications.profiles.views import (executors_list_view, executor_detail_view,
+                                         customers_list_view, customer_detail_view)
 
 urlpatterns = [
-    path("executors/list/", views.get_executors_view),
-    path("executors/create/", views.create_executor_view),
-    path("executor/<int:pk>/detail/", views.get_executor_view),
-    path("executors/<int:pk>/delete/", views.delete_executor_view),
+    path("executors/", executors_list_view),
+    path("executor/<int:pk>/", executor_detail_view),
+    path("customers/", customers_list_view),
+    path("customer/<int:pk>/", customer_detail_view),
 ]

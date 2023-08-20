@@ -1,7 +1,6 @@
 from applications.users.models import User
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
-from applications.users.services import get_all_users
 
 
 class UserSerializer(serializers.Serializer):
@@ -16,6 +15,5 @@ class SignInSerializer(UserSerializer):
 
 
 class SignUpSerializer(UserSerializer):
-    email = serializers.EmailField(validators=[UniqueValidator(get_all_users())])
+    email = serializers.EmailField(validators=[UniqueValidator(User.objects.all())])
     role = serializers.ChoiceField(choices=User.ROLE_CHOICES)
-
