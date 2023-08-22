@@ -31,6 +31,7 @@ class OrderResponse(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='orderings')
     executor = models.ForeignKey(ExecutorProfile, on_delete=models.CASCADE, related_name='orderings')
     attached = models.BooleanField(default=False)
+    completed = models.BooleanField(default=False)
 
     def __str__(self):
         return f"Ordering: {self.order} - Executor: {self.executor}"
