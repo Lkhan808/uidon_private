@@ -50,6 +50,9 @@ def create_order_response(request):
         return Response({'message': 'Заказ или исполнитель не найдены'}, status=status.HTTP_404_NOT_FOUND)
 
     response = OrderResponse.objects.create(order=order, executor=executor)
+    order.response_count += 1
+    order.save()
+
     return Response({'message': 'Отклик успешно создан'}, status=status.HTTP_201_CREATED)
 
 

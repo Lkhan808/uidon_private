@@ -21,8 +21,8 @@ class Order(models.Model):
     executor = models.ForeignKey(ExecutorProfile, on_delete=models.CASCADE, related_name='orders', null=True, blank=True)
     customer = models.ForeignKey(CustomerProfile, on_delete=models.CASCADE, related_name='orders')
     skill = models.ManyToManyField(Skill)
-    
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='new')
+    response_count = models.PositiveIntegerField(default=0, null=True)
 
     def __str__(self):
         return self.title

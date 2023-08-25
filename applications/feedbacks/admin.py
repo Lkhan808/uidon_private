@@ -1,3 +1,5 @@
 from django.contrib import admin
+from .models import FeedbackOnExecutor, FeedbackOnCustomer
 
-# Register your models here.
+admin.site.register(FeedbackOnExecutor)
+admin.site.register(FeedbackOnCustomer)

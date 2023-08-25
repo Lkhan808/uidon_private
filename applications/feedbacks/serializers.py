@@ -1,12 +1,13 @@
 from rest_framework import serializers
-from .models import Review, Rating
+from .models import FeedbackOnExecutor, FeedbackOnCustomer
 
-class ReviewSerializer(serializers.ModelSerializer):
+class FeedbackOnExecutorSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Review
-        fields = '__all__'
+        model = FeedbackOnExecutor
+        fields = "__all__"
 
-class RatingSerializer(serializers.ModelSerializer):
+
+class FeedbackOnCustomerSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Rating
-        fields = '__all__'
+        model = FeedbackOnCustomer
+        fields = "__all__"

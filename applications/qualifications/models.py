@@ -40,8 +40,8 @@ class Education(models.Model):
         db_table = "educations"
 
     def __str__(self):
-        return (f"University: {self.university} Faculty: {self.faculty} "
-                f"Graduation date: {self.graduation_date}")
+        return (f"Университет: {self.university} Факультет: {self.faculty} "
+                f"Дата окончания: {self.graduation_date}")
 
 
 class Contact(models.Model):
@@ -56,7 +56,7 @@ class Contact(models.Model):
         db_table = "contacts"
 
     def __str__(self):
-        return self.value
+        return f"{self.value}"
 
 
 class Portfolio(models.Model):
@@ -71,4 +71,4 @@ class Portfolio(models.Model):
         db_table = "portfolios"
 
     def __str__(self):
-        return f"{self.executor}---{self.url}"
+        return f"{self.url}"
