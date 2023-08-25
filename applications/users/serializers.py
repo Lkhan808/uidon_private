@@ -20,6 +20,14 @@ class SignUpSerializer(UserSerializer):
 
 
 class PasswordResetSerializer(serializers.Serializer):
-    uid = serializers.CharField()
-    token = serializers.CharField()
-    new_password = serializers.CharField(write_only=True)
+    new_password1 = serializers.CharField(write_only=True)
+    new_password2 = serializers.CharField(write_only=True)
+
+    def validate(self, data):
+        new_password1 = data.get('new_password1')
+        new_password2 = data.get('new_password2')
+
+        if new_password1 and new_password2 and new_password1 == new_password2:
+            return data
+        else:
+            raise serializers.ValidationError("Passwords do not match.")

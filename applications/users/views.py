@@ -4,12 +4,12 @@ from django.utils.http import urlsafe_base64_decode
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.request import Request
-
+from django.contrib.auth.forms import SetPasswordForm
 from applications.users.models import User
 from applications.users.serializers import SignUpSerializer, SignInSerializer, UserSerializer, PasswordResetSerializer
 
 from applications.users.services import UserService
-from django.contrib.auth import authenticate
+from django.contrib.auth import authenticate, login
 from applications.users.utils import generate_jwt_for_user
 from rest_framework.decorators import api_view
 
@@ -73,22 +73,24 @@ def password_reset(request):
 
 
 @api_view(['POST'])
-def password_reset_confirm(request):
-    serializer = PasswordResetSerializer(data=request.data)
-    if serializer.is_valid(raise_exception=True):
-        uid = serializer.validated_data['uid']
-        token = serializer.validated_data['token']
-        new_password = serializer.validated_data['new_password']
-        try:
-            uid = force_str(urlsafe_base64_decode(uid))
-            user = User.objects.get(pk=uid)
-        except (TypeError, ValueError, OverflowError, User.DoesNotExist):
-            user = None
-
-        if user is not None and default_token_generator.check_token(user, token):
-            user.set_password(new_password)
-            user.save()
-            return Response({'detail': 'Password has been reset successfully.'}, status=status.HTTP_200_OK)
+def password_reset_confirm(request: Request, uid, token):
+    try:
+        uid = force_str(urlsafe_base64_decode(uid))
+        user = User.objects.get(pk=uid)
+    except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+        user = None
+    if user is not None and default_token_generator.check_token(user, token):
+        if request.method == 'POST':
+            serializer = PasswordResetSerializer(data=request.data)
+            if serializer.is_valid():
+                new_password = serializer.validated_data['new_password1']
+                user.set_password(new_password)
+                user.save()
+                return Response({'message': 'Password has been reset successfully.'}, status=status.HTTP_200_OK)
+            else:
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         else:
-            return Response({'detail': 'Invalid reset link.'}, status=status.HTTP_400_BAD_REQUEST)
-
+            return Response({'message': 'Please submit a POST request to reset your password.'},
+                            status=status.HTTP_400_BAD_REQUEST)
+    else:
+        return Response({'detail': 'Invalid reset link.'}, status=status.HTTP_400_BAD_REQUEST)

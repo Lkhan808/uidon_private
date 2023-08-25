@@ -8,6 +8,6 @@ urlpatterns = [
     path('signin/', sign_in_view),
     path('token/refresh/', TokenRefreshView.as_view()),
     path('password-reset/', password_reset, name='password-reset'),
-    path('password-reset/confirm/', password_reset_confirm, name='password-reset-update'),
+    path('password-reset/confirm/<str:uid>/<str:token>/', password_reset_confirm, name='password-reset-update'),
 ]
 
