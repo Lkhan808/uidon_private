@@ -45,7 +45,7 @@ class Education(models.Model):
 
 
 class Contact(models.Model):
-    value = models.CharField(max_length=100)
+    value = models.TextField(max_length=200)
     executor = models.ForeignKey(
         "profiles.ExecutorProfile",
         on_delete=models.CASCADE,
