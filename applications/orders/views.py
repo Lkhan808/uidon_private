@@ -1,5 +1,5 @@
-from rest_framework import status
-from rest_framework.decorators import api_view
+from rest_framework import status, permissions
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from .models import Order, OrderResponse
 from .serializers import OrderSerializer, OrderResponseSerializer
@@ -50,6 +50,9 @@ def create_order_response(request):
         return Response({'message': 'Заказ или исполнитель не найдены'}, status=status.HTTP_404_NOT_FOUND)
 
     response = OrderResponse.objects.create(order=order, executor=executor)
+    order.response_count += 1
+    order.save()
+
     return Response({'message': 'Отклик успешно создан'}, status=status.HTTP_201_CREATED)
 
 
@@ -76,13 +79,49 @@ def assign_executor_to_order(request, order_id):
     order.executor = executor
     order.status = 'в работе'
     order.save()
+    order_response = OrderResponse.objects.get(order=order, executor=executor)
+    order_response.attached = True
+    order_response.save()
     return Response({'message': 'Исполнитель назначен на заказ'})
 
 
-@api_view(['POST'])
-def leave_order_review(request, order_response_id):
-    response = OrderResponse.objects.get(pk=order_response_id)
-    review_text = request.data.get('review_text')
-    # Создайте модель отзыва и свяжите его с заказом, исполнителем и текстом отзыва
-    # order_review = OrderReview.objects.create(order=response.order, executor=response.executor, review_text=review_text)
-    return Response({'message': 'Отзыв успешно оставлен'}, status=status.HTTP_201_CREATED)
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated])
+def executor_orders_view(request):
+    user = request.user
+    executor_profile = ExecutorProfile.objects.get(user=user)  # Получаем профиль исполнителя по пользователю
+
+    orders_assigned = OrderResponse.objects.filter(executor=executor_profile, attached=True)
+    orders_completed = OrderResponse.objects.filter(executor=executor_profile, completed=True)
+
+    assigned_serializer = OrderResponseSerializer(orders_assigned, many=True)
+    completed_serializer = OrderResponseSerializer(orders_completed, many=True)
+
+    return Response({
+        'assigned_orders': assigned_serializer.data,
+        'completed_orders': completed_serializer.data
+    })
+
+@api_view(['PATCH'])
+@permission_classes([permissions.IsAuthenticated])
+def close_order_view(request, order_id):
+    user = request.user
+    try:
+        executor_profile = user.executor_profile
+    except ExecutorProfile.DoesNotExist:
+        return Response({'message': 'Профиль исполнителя не найден'}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        order = Order.objects.get(pk=order_id, executor=executor_profile, status='в работе')
+        order.status = 'закрыт'
+        order.save()
+
+        order_response = OrderResponse.objects.get(order=order, executor=executor_profile)
+        order_response.completed = True
+        order_response.attached = False  # Убираем из assigned_orders
+        order_response.save()
+
+
+        return Response(data="Заказ закрыт", status=status.HTTP_200_OK)
+    except Order.DoesNotExist:
+        return Response({'message': 'Заказ не найден или не может быть закрыт'}, status=status.HTTP_400_BAD_REQUEST)

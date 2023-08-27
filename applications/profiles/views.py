@@ -45,7 +45,7 @@ def customers_list_view(request: Request):
         serializer = CustomerSerializer(customers, many=True)
         return Response(data=serializer.data, status=status.HTTP_200_OK)
     else:
-        serializer = ExecutorSerializer(data=request.data)
+        serializer = CustomerSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(data=serializer.data, status=status.HTTP_201_CREATED)
@@ -56,7 +56,7 @@ def customer_detail_view(request: Request, pk):
     """ Детальный просмотр, удаление, изменение фрилансера """
     customer = CustomerProfile.objects.get(pk=pk)
     if request.method == "GET":
-        serializer = ExecutorSerializer(customer)
+        serializer = CustomerSerializer(customer)
         return Response(data=serializer.data, status=status.HTTP_200_OK)
     elif request.method == "PUT":
         serializer = CustomerSerializer(data=request.data)
