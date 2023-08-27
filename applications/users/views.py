@@ -1,17 +1,18 @@
+from django.contrib.auth.hashers import check_password
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.encoding import force_str
 from django.utils.http import urlsafe_base64_decode
-from rest_framework import status
+from rest_framework import status, permissions
 from rest_framework.response import Response
 from rest_framework.request import Request
-from django.contrib.auth.forms import SetPasswordForm
 from applications.users.models import User
-from applications.users.serializers import SignUpSerializer, SignInSerializer, UserSerializer, PasswordResetSerializer
+from applications.users.serializers import SignUpSerializer, SignInSerializer, UserSerializer, PasswordResetSerializer, \
+    ChangePassswordSerializer
 
 from applications.users.services import UserService
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate
 from applications.users.utils import generate_jwt_for_user
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
 
 
 @api_view(["POST"])
@@ -94,3 +95,22 @@ def password_reset_confirm(request: Request, uid, token):
                             status=status.HTTP_400_BAD_REQUEST)
     else:
         return Response({'detail': 'Invalid reset link.'}, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['PUT'])
+@permission_classes([permissions.IsAuthenticated])
+def change_password_view(request):
+    user = request.user
+    if request.method == 'PUT':
+        serializer = ChangePassswordSerializer(data=request.data)
+        if serializer.is_valid():
+            password = serializer.validated_data['password']
+            new_password = serializer.validated_data['new_password']
+            if check_password(password, user.password):
+                user.set_password(new_password)
+                user.save()
+                return Response({'message': 'Пароль успешно изменен.'}, status=status.HTTP_200_OK)
+            else:
+                return Response({'message': 'Текущий пароль неверен.'}, status=status.HTTP_403_FORBIDDEN)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
