@@ -10,7 +10,7 @@ class Order(models.Model):
         ('закрыт', 'закрыт'),
     )
     PAYMENT_METHOD_CHOICES = (
-        ('наличный', 'наличный'),
+        ('почасовая', 'почасовая'),
         ('оклад', 'оклад'),
     )
 
@@ -23,6 +23,7 @@ class Order(models.Model):
     skill = models.ManyToManyField(Skill)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='new')
     response_count = models.PositiveIntegerField(default=0, null=True)
+    create_date = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return self.title
@@ -32,7 +33,14 @@ class OrderResponse(models.Model):
     executor = models.ForeignKey(ExecutorProfile, on_delete=models.CASCADE, related_name='orderings')
     attached = models.BooleanField(default=False)
     completed = models.BooleanField(default=False)
+    response_date = models.DateTimeField(auto_now_add=True)
+
 
     def __str__(self):
         return f"Ordering: {self.order} - Executor: {self.executor}"
+
+class FavoriteOrder(models.Model):
+    executor = models.ForeignKey(ExecutorProfile, on_delete=models.CASCADE)
+    order = models.ForeignKey(Order, on_delete=models.CASCADE)
+    added_date = models.DateTimeField(auto_now_add=True)
 

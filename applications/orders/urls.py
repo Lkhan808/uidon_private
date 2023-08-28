@@ -7,7 +7,11 @@ from .views import (
     list_responses_for_order,
     order_detail,
     close_order_view,
-    executor_orders_view
+    executor_orders_view,
+    add_to_favorite,
+    remove_from_favorite,
+    favorite_orders_list,
+
 )
 urlpatterns = [
     path('create-order/', create_order, name='create-order'),
@@ -18,6 +22,9 @@ urlpatterns = [
     path('order/<int:order_id>/assign-executor/', assign_executor_to_order, name='assign-executor-to-order'),
     path('executor/orders/', executor_orders_view, name='executor-orders'),
     path('executor/orders/<int:order_id>/close/', close_order_view, name='close-order'),
+    path('order/add-favorite/<int:order_id>/', add_to_favorite, name='add-to-favorite'),
+    path('order/favorite-list/executor/', favorite_orders_list, name='favorite-executors-list'),
+    path('order/delete/<int:order_id>/', remove_from_favorite, name='remove-executor-favorites')
 
 ]
 
