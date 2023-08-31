@@ -1,10 +1,10 @@
+version: '3'
+
 services:
   backend:
     build:
       context: .
     container_name: backend
-    environment:
-      - API_ADDRESS=16.171.21.135
     command: sh -c "python manage.py makemigrations && python manage.py migrate && python manage.py runserver 0.0.0.0:80"
     ports:
       - "80:80"
