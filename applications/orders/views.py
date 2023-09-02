@@ -3,7 +3,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from .models import Order, OrderResponse, FavoriteOrder
 from .serializers import OrderSerializer, OrderResponseSerializer
-from applications.profiles.models import ExecutorProfile
+from applications.profiles.models import ExecutorProfile, CustomerProfile
 from .decorators import require_executor
 from ..profiles.serializers import ExecutorSerializer
 
@@ -24,6 +24,25 @@ def list_orders(request):
     orders = Order.objects.all()
     serializer = OrderSerializer(orders, many=True)
     return Response(serializer.data)
+
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated])
+def customer_orders_list(request):
+    # Получаем текущего аутентифицированного пользователя
+    user = request.user
+
+    # Проверяем, есть ли у пользователя профиль заказчика
+    if not hasattr(user, 'customer_profile'):
+        return Response({'error': 'Пользователь не является заказчиком'}, status=status.HTTP_403_FORBIDDEN)
+
+    # Получаем заказы, созданные этим заказчиком
+    customer_orders = Order.objects.filter(customer=user.customer_profile)
+    serializer = OrderSerializer(customer_orders, many=True)
+
+    return Response(serializer.data)
+
+
 
 @api_view(['GET', 'PATCH', 'DELETE'])
 def order_detail(request, order_id):
