@@ -11,7 +11,7 @@ from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
 def send_mail_for_user(user: User, jwt):
     subject = 'Подтвердите свой EMAIL'
     message = (f'Перейдите по ссылке для подтверждения своего аккаунта:'
-               f'\n{base.BASE_URL}api/auth/verify-email/{user.id}/{jwt["access"]}/')
+               f'\nhttp://16.171.21.135/api/auth/verify-email/{user.id}/{jwt["access"]}/')
     from_email = base.EMAIL_HOST_USER
     recipient_list = [user.email]
     send_mail(subject, message, from_email, recipient_list)
