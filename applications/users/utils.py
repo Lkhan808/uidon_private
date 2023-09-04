@@ -29,7 +29,7 @@ def generate_jwt_for_user(user: User):
 def send_mail_reset_password(user: User):
     token = default_token_generator.make_token(user)
     uid = urlsafe_base64_encode(force_bytes(user.id))
-    reset_url = f"{base.BASE_URL}/password-reset/{uid}/{str(token)}/"
+    reset_url = f"{base.BASE_URL}api/auth/password-reset/confirm/{uid}/{str(token)}/"
     subject = 'Reset your password'
     message = f"Please click the following link to reset your password:\n{reset_url}"
     from_email = base.EMAIL_HOST_USER
