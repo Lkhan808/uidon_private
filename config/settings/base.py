@@ -185,6 +185,7 @@ EMAIL_HOST_USER = env("EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD")
 BASE_URL = env("BASE_URL")
 EMAIL_USE_SSL = env("EMAIL_USE_SSL", cast=bool)
+MAIL_URL = env("MAIL_URL")
 
 JAZZMIN_SETTINGS = {
     "site_title": "Library Admin",
