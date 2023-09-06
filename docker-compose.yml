@@ -6,7 +6,7 @@ services:
       context: .
     container_name: backend
     environment:
-      DJANGO_SUPERUSER_EMAIL: "admin1@gmail.com"
+      DJANGO_SUPERUSER_EMAIL: "admin@gmail.com"
       DJANGO_SUPERUSER_PASSWORD: "Def2638234"
     command: >
       sh -c "
