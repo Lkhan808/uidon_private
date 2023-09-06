@@ -27,6 +27,6 @@ urlpatterns = [
     path('order/add-favorite/<int:order_id>/', add_to_favorite, name='add-to-favorite'),
     path('order/favorite-list/executor/', favorite_orders_list, name='favorite-executors-list'),
     path('order/delete/<int:order_id>/', remove_from_favorite, name='remove-executor-favorites'),
-    path('customer/orders/list', customer_orders_list, name='customer-orders-list'),
-    path('customer/close/orders/list', customer_close_orders_list, name='customer-close-orders-list'),
+    path('customer/orders/list/', customer_orders_list, name='customer-orders-list'),
+    path('customer/close/orders/list/', customer_close_orders_list, name='customer-close-orders-list'),
 ]
