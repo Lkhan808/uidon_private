@@ -1,19 +1,23 @@
 from rest_framework import serializers
 from applications.profiles.models import ExecutorProfile, CustomerProfile
-
-
-
+from applications.qualifications.serializers import ContactSerializer, LanguageSerializer, PortfolioSerializer
 
 class ExecutorSerializer(serializers.ModelSerializer):
-    contacts = serializers.StringRelatedField(many=True, read_only=True)
-    educations = serializers.StringRelatedField(many=True, read_only=True)
-    languages = serializers.StringRelatedField(many=True, read_only=True)
-    portfolios = serializers.StringRelatedField(many=True, read_only=True)
-    ratings = serializers.SerializerMethodField()
-    descriptions = serializers.SerializerMethodField()
+    contacts = ContactSerializer(many=True, required=False)
+    languages = LanguageSerializer(many=True, required=False)
+    portfolios = PortfolioSerializer(many=True, required=False)
+    feedbacks_on_executor = serializers.StringRelatedField(many=True, read_only=True)
 
     class Meta:
         model = ExecutorProfile
+        fields = "__all__"
+
+
+class CustomerSerializer(serializers.ModelSerializer):
+    feedbacks_on_customer = serializers.StringRelatedField(many=True, read_only=True)
+
+    class Meta:
+        model = CustomerProfile
         fields = "__all__"
 
     def get_ratings(self, obj):
@@ -29,15 +33,3 @@ class ExecutorSerializer(serializers.ModelSerializer):
         data['ratings'] = self.get_ratings(instance)
         data['descriptions'] = self.get_descriptions(instance)
         return data
-
-# def to_representation(self, instance):
-    #     data = super().to_representation(instance)
-    #     data['skills'] = [skill.name for skill in instance.skills.all()]
-    #     return data
-
-
-class CustomerSerializer(serializers.ModelSerializer):
-    feedbacks_on_customer = serializers.StringRelatedField(many=True, read_only=True)
-    class Meta:
-        model = CustomerProfile
-        fields = "__all__"

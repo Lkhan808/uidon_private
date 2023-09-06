@@ -20,15 +20,15 @@ def executors_list_view(request: Request):
         return Response(data=serializer.data, status=status.HTTP_201_CREATED)
 
 
-@api_view(["GET", "DELETE", "PUT"])
+@api_view(["GET", "DELETE", "PATCH"])  # Заменяем "PUT" на "PATCH" здесь
 def executor_detail_view(request: Request, pk):
-    """ Детальный просмотр, удаление, изменение фрилансера """
+    """ Детальный просмотр, удаление, частичное изменение фрилансера """
     executor = ExecutorProfile.objects.get(pk=pk)
     if request.method == "GET":
         serializer = ExecutorSerializer(executor)
         return Response(data=serializer.data, status=status.HTTP_200_OK)
-    elif request.method == "PUT":
-        serializer = ExecutorSerializer(data=request.data)
+    elif request.method == "PATCH":  # Изменяем условие на "PATCH" здесь
+        serializer = ExecutorSerializer(executor, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(data=serializer.data, status=status.HTTP_200_OK)

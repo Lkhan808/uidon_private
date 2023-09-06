@@ -1,6 +1,5 @@
 from functools import wraps
 from django.http import HttpResponseForbidden
-from .models import ExecutorProfile
 
 def require_executor(view_func):
     @wraps(view_func)

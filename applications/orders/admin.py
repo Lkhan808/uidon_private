@@ -9,3 +9,7 @@ class OrderAdmin(admin.ModelAdmin):
 @admin.register(OrderResponse)
 class OrderingAdmin(admin.ModelAdmin):
     pass
+
+@admin.register(FavoriteOrder)
+class FavoriteOrderAdmin(admin.ModelAdmin):
+    pass

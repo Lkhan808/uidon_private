@@ -6,11 +6,10 @@ from django.db.models import Count, Avg
 
 class BaseProfile(models.Model):
     user = None
-    first_name = models.CharField(max_length=150)
-    last_name = models.CharField(max_length=150)
+    full_name = models.CharField(max_length=150)
     avatar = models.ImageField(null=True, blank=True)
-    location = models.CharField(max_length=150)
-    phone = models.CharField(unique=True, max_length=13)
+    location = models.CharField(max_length=150, null=True, blank=True)
+    phone = models.CharField(unique=True, max_length=13, null=True, blank=True)
 
     class Meta:
         abstract = True
@@ -19,7 +18,7 @@ class BaseProfile(models.Model):
         return self.get_full_name()
 
     def get_full_name(self):
-        return f"{self.first_name} {self.last_name}"
+        return f"{self.full_name}"
 
 
 class CustomerProfile(BaseProfile):
@@ -44,10 +43,16 @@ class ExecutorProfile(BaseProfile):
         ("Среднее", "Среднее"),
         ("Высшее", "Высшее"),
     )
+    PAYMENT_METHOD_CHOICES = (
+        ('почасовая', 'почасовая'),
+        ('оклад', 'оклад'),
+    )
+
     biography = models.TextField()
     date_birth = models.DateField()
     gender = models.CharField(choices=GENDER_CHOICES, max_length=20)
     profession = models.CharField(max_length=150)
+    salary_method = models.CharField(max_length=50, choices=PAYMENT_METHOD_CHOICES, null=True)
     salary = models.DecimalField(max_digits=10, decimal_places=2)
     education_level = models.CharField(max_length=15, choices=EDUCATION_CHOICES)
     skills = models.ManyToManyField(Skill)
@@ -59,11 +64,3 @@ class ExecutorProfile(BaseProfile):
 
     class Meta:
         db_table = 'executors'
-
-    @property
-    def reviews_count(self):
-        return self.reviews.all().aggregate(value=Count("id"))["value"]
-
-    @property
-    def average_rating(self):
-        return self.ratings.all().aggregate(value=Avg("grade"))["value"]
