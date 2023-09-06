@@ -1,3 +1,7 @@
+import datetime
+
+import django.utils.timezone
+
 from applications.qualifications.models import Skill
 from applications.users.models import User
 from django.db import models
@@ -10,6 +14,7 @@ class BaseProfile(models.Model):
     avatar = models.ImageField(null=True, blank=True)
     location = models.CharField(max_length=150, null=True, blank=True)
     phone = models.CharField(unique=True, max_length=13, null=True, blank=True)
+    created_date = models.DateField(auto_now_add=True)
 
     class Meta:
         abstract = True
@@ -56,6 +61,7 @@ class ExecutorProfile(BaseProfile):
     salary = models.DecimalField(max_digits=10, decimal_places=2)
     education_level = models.CharField(max_length=15, choices=EDUCATION_CHOICES)
     skills = models.ManyToManyField(Skill)
+    view_count = models.PositiveIntegerField(default=0)
     user = models.OneToOneField(
         User,
         on_delete=models.CASCADE,
@@ -64,3 +70,9 @@ class ExecutorProfile(BaseProfile):
 
     class Meta:
         db_table = 'executors'
+
+
+class ProfileView(models.Model):
+    viewer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='viewed_profiles')
+    profile = models.ForeignKey(ExecutorProfile, on_delete=models.CASCADE)
+    viewed_at = models.DateTimeField(auto_now_add=True)

@@ -13,6 +13,13 @@ class ExecutorSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
+class ExecutorProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ExecutorProfile
+        fields = '__all__'
+
+
+
 class CustomerSerializer(serializers.ModelSerializer):
     feedbacks_on_customer = serializers.StringRelatedField(many=True, read_only=True)
 

@@ -114,3 +114,17 @@ def change_password_view(request):
                 return Response({'message': 'Текущий пароль неверен.'}, status=status.HTTP_403_FORBIDDEN)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['PATCH'])
+@permission_classes([permissions.IsAuthenticated])
+def change_email_view(request):
+    user = request.user
+    if request.method == 'PATCH':
+        new_email = request.data.get('new_email')
+        if new_email and new_email != user.email:
+            user.email = new_email
+            user.save()
+        else:
+            return Response(data="new email is unreached or new email is similar with old email")
+    return Response(data='email changed successfully', status=status.HTTP_200_OK)
