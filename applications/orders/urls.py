@@ -18,6 +18,7 @@ from .views import (
 urlpatterns = [
     path('create-order/', create_order, name='create-order'),
     path('orders/', list_orders, name='list-orders'),
+    path('orders/n/', list_orders, name='list-orders-n'),
     path('order/<int:order_id>/', order_detail, name='order-detail'),
     path('order/respond-to-order/', create_order_response, name='create-order-response'),
     path('order/<int:order_id>/responses/', list_responses_for_order, name='list-responses-for-order'),
