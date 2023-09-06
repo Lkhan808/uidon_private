@@ -20,8 +20,6 @@ urlpatterns = [
     path('orders/', list_orders, name='list-orders'),
     path('customer/orders/', customer_orders_list, name='customer-orders'),
     path('customer/close/orders/', customer_close_orders_list, name='customer-close-orders'),
-    path('customer/orders/', customer_orders_list),
-    path('customer/close/orders/', customer_close_orders_list),
     path('order/<int:order_id>/', order_detail, name='order-detail'),
     path('order/respond-to-order/', create_order_response, name='create-order-response'),
     path('order/<int:order_id>/responses/', list_responses_for_order, name='list-responses-for-order'),
@@ -32,7 +30,3 @@ urlpatterns = [
     path('order/favorite-list/executor/', favorite_orders_list, name='favorite-executors-list'),
     path('order/delete/<int:order_id>/', remove_from_favorite, name='remove-executor-favorites')
 ]
-
-
-
-

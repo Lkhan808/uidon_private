@@ -43,4 +43,3 @@ class FavoriteOrder(models.Model):
     executor = models.ForeignKey(ExecutorProfile, on_delete=models.CASCADE)
     order = models.ForeignKey(Order, on_delete=models.CASCADE)
     added_date = models.DateTimeField(auto_now_add=True)
-
