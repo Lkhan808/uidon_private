@@ -40,3 +40,8 @@ class CustomerSerializer(serializers.ModelSerializer):
         data['ratings'] = self.get_ratings(instance)
         data['descriptions'] = self.get_descriptions(instance)
         return data
+
+class CustomerProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CustomerProfile
+        fields = '__all__'

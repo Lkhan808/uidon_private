@@ -1,11 +1,12 @@
 from django.db.models import Q
 from django.utils import timezone
-from rest_framework import status
-from rest_framework.decorators import api_view
+from rest_framework import status, permissions
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
 from applications.profiles.models import ExecutorProfile, CustomerProfile, ProfileView
-from applications.profiles.serializers import ExecutorSerializer, CustomerSerializer, ExecutorProfileSerializer
+from applications.profiles.serializers import ExecutorSerializer, CustomerSerializer, ExecutorProfileSerializer, CustomerProfileSerializer
 from django.contrib.sessions.models import Session
 
 
@@ -13,13 +14,7 @@ from django.contrib.sessions.models import Session
 def executors_list_view(request: Request):
     """ Создание или список фрилансеров """
     if request.method == "GET":
-        search_param = request.query_params.get('search', '')
-        skill_param = request.query_params.get('skills', '')  # Получить параметр запроса "skills"
-        salary_type_param = request.query_params.get('salary_type', '')  # Получить параметр запроса "salary_type"
-        executors = ExecutorProfile.objects.filter(
-            Q(profession__icontains=search_param),
-            Q(profession__icontains=skill_param),
-            Q(profession__icontains=salary_type_param))
+        executors = ExecutorProfile.objects.all()
         serializer = ExecutorSerializer(executors, many=True)
         return Response(data=serializer.data, status=status.HTTP_200_OK)
     else:
@@ -88,3 +83,24 @@ def customer_detail_view(request: Request, pk):
     else:
         customer.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def my_profile_view(request):
+    user = request.user  # Получаем текущего пользователя
+
+    # Проверяем, является ли пользователь заказчиком (customer)
+    if hasattr(user, 'customer_profile'):
+        profile = user.customer_profile  # Получаем профиль заказчика
+        serializer = CustomerProfileSerializer(profile)
+    # Проверяем, является ли пользователь исполнителем (executor)
+    elif hasattr(user, 'executor_profile'):
+        profile = user.executor_profile  # Получаем профиль исполнителя
+        serializer = ExecutorProfileSerializer(profile)
+    else:
+        return Response({"message": "Профиль не найден"}, status=400)
+
+    return Response(serializer.data, status=200)
+

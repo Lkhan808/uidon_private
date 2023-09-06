@@ -6,7 +6,7 @@ from .models import Order, OrderResponse, FavoriteOrder
 from .serializers import OrderSerializer, OrderResponseSerializer
 from applications.profiles.models import ExecutorProfile, CustomerProfile
 from .decorators import require_executor
-from .permissions import IsCustomerOrReadOnly, IsExecutorPermission
+from .permissions import IsCustomerOrReadOnly, IsExecutorPermission, IsCustomerPermission
 
 
 @api_view(['POST'])
@@ -113,7 +113,14 @@ def create_order_response(request):
     # Получаем текущего исполнителя (предполагается, что вы авторизованы как исполнитель)
     executor = request.user.executor_profile
 
-    # Создаем объект OrderResponse, автоматически устанавливая executor
+    # Проверяем, есть ли уже отклик от этого исполнителя для данного заказа
+    existing_response = OrderResponse.objects.filter(order=order, executor=executor).first()
+
+    if existing_response:
+        return Response({'message': 'Вы уже оставили отклик для этого заказа'},
+                        status=status.HTTP_400_BAD_REQUEST)
+
+    # Если отклика от исполнителя еще нет, то создаем его
     response = OrderResponse(order=order, executor=executor)
     response.save()
 
@@ -124,7 +131,9 @@ def create_order_response(request):
 
 
 
+
 @api_view(['GET'])
+@permission_classes([IsCustomerPermission])
 def list_responses_for_order(request, order_id):
     order = Order.objects.get(pk=order_id)
     responses = order.orderings.all()
