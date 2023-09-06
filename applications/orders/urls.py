@@ -33,3 +33,6 @@ urlpatterns = [
     path('order/delete/<int:order_id>/', remove_from_favorite, name='remove-executor-favorites')
 ]
 
+
+
+
