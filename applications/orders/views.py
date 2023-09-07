@@ -44,31 +44,21 @@ def list_orders_view(request):
 
 
 @api_view(['GET'])
-@permission_classes([permissions.IsAuthenticated])
+@permission_classes([IsCustomerPermission])
 def customer_orders_list_view(request):
-    # Получаем текущего аутентифицированного пользователя
-    user = request.user
-
-    # Проверяем, есть ли у пользователя профиль заказчика
-    if not hasattr(user, 'customer_profile'):
-        return Response({'error': 'Пользователь не является заказчиком'}, status=status.HTTP_403_FORBIDDEN)
 
     # Получаем заказы, созданные этим заказчиком
-    customer_orders = Order.objects.filter(customer=user.customer_profile)
+    customer_orders = Order.objects.filter(customer=request.user.customer_profile)
     serializer = OrderSerializer(customer_orders, many=True)
 
     return Response(serializer.data)
 
 
 @api_view(['GET'])
-@permission_classes([permissions.IsAuthenticated])
+@permission_classes([IsCustomerPermission])
 def customer_close_orders_list_view(request):
-    user = request.user
 
-    if not hasattr(user, 'customer_profile'):
-        return Response({'error': 'Пользователь не является заказчиком'}, status=status.HTTP_403_FORBIDDEN)
-
-    customer_close_orders = Order.objects.filter(customer=user.customer_profile, status='закрыт')
+    customer_close_orders = Order.objects.filter(customer=request.user.customer_profile, status='закрыт')
     serializer = OrderSerializer(customer_close_orders, many=True)
 
     return Response(serializer.data)
@@ -242,7 +232,7 @@ def close_order_view(request, order_id):
 
 
 @api_view(['POST'])
-@permission_classes([permissions.IsAuthenticated])
+@permission_classes([IsExecutorPermission])
 def add_to_favorite_view(request, order_id):
     user = request.user
     try:
@@ -258,7 +248,7 @@ def add_to_favorite_view(request, order_id):
 
 
 @api_view(['DELETE'])
-@permission_classes([permissions.IsAuthenticated])
+@permission_classes([IsExecutorPermission])
 def remove_from_favorite_view(request, order_id):
     user = request.user
     try:
