@@ -1,3 +1,4 @@
+from django.db import transaction
 from rest_framework import status, permissions
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
@@ -11,7 +12,7 @@ from .permissions import IsCustomerOrReadOnly, IsExecutorPermission, IsCustomerP
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])  # Только аутентифицированные пользователи могут создавать заказы
-def create_order(request):
+def create_order_view(request):
     user = request.user
 
     # Проверяем, является ли пользователь заказчиком (customer)
@@ -36,7 +37,7 @@ def create_order(request):
 
 
 @api_view(['GET'])
-def list_orders(request):
+def list_orders_view(request):
     orders = Order.objects.filter(status='новый') # Фильтруем заказы по статусу "новый"
     serializer = OrderSerializer(orders, many=True)
     return Response(serializer.data)
@@ -44,7 +45,7 @@ def list_orders(request):
 
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated])
-def customer_orders_list(request):
+def customer_orders_list_view(request):
     # Получаем текущего аутентифицированного пользователя
     user = request.user
 
@@ -61,7 +62,7 @@ def customer_orders_list(request):
 
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated])
-def customer_close_orders_list(request):
+def customer_close_orders_list_view(request):
     user = request.user
 
     if not hasattr(user, 'customer_profile'):
@@ -75,7 +76,7 @@ def customer_close_orders_list(request):
 
 @api_view(['GET', 'PATCH', 'DELETE'])
 @permission_classes([IsCustomerOrReadOnly])  # Применяем наши разрешения
-def order_detail(request, order_id):
+def order_detail_view(request, order_id):
     try:
         order = Order.objects.get(pk=order_id)
     except Order.DoesNotExist:
@@ -98,7 +99,7 @@ def order_detail(request, order_id):
 
 @api_view(['POST'])
 @permission_classes([IsExecutorPermission])
-def create_order_response(request):
+def create_order_response_view(request):
     order_id = request.data.get('order_id')
 
     if not order_id:
@@ -134,61 +135,89 @@ def create_order_response(request):
 
 @api_view(['GET'])
 @permission_classes([IsCustomerPermission])
-def list_responses_for_order(request, order_id):
+def list_responses_for_order_view(request, order_id):
     order = Order.objects.get(pk=order_id)
     responses = order.orderings.all()
     serializer = OrderResponseSerializer(responses, many=True)
     return Response(serializer.data)
 
 
+
 @api_view(['PUT'])
-def assign_executor_to_order(request, order_id):
-    order = Order.objects.get(pk=order_id)
+@permission_classes([IsCustomerPermission])
+def assign_executor_to_order_view(request, order_id):
     executor_id = request.data.get('executor_id')
     if not executor_id:
         return Response({'error': 'Не указан ID исполнителя'}, status=status.HTTP_400_BAD_REQUEST)
 
     try:
+        order = Order.objects.select_for_update().get(pk=order_id)
         executor = ExecutorProfile.objects.get(id=executor_id)
+    except Order.DoesNotExist:
+        return Response({'error': 'Заказ не найден'}, status=status.HTTP_404_NOT_FOUND)
     except ExecutorProfile.DoesNotExist:
         return Response({'error': 'Исполнитель с указанным ID не найден'}, status=status.HTTP_404_NOT_FOUND)
 
-    order.executor = executor
-    order.status = 'в работе'
-    order.save()
-    order_response = OrderResponse.objects.get(order=order, executor=executor)
-    order_response.attached = True
-    order_response.save()
+    if order.executor:
+        return Response({'error': 'Исполнитель уже назначен на этот заказ'}, status=status.HTTP_400_BAD_REQUEST)
+
+    with transaction.atomic():
+        order.executor = executor
+        order.status = 'в работе'
+        order.save()
+
+        OrderResponse.objects.create(order=order, executor=executor, attached=True)
+
     return Response({'message': 'Исполнитель назначен на заказ'})
 
 
 @api_view(['GET'])
-@permission_classes([permissions.IsAuthenticated])
-def executor_orders_view(request):
-    user = request.user
-    executor_profile = ExecutorProfile.objects.get(user=user)
+@permission_classes([IsExecutorPermission])
+def executor_assigned_view(request):
+    executor_profile = request.user.executor_profile
 
     orders_assigned = OrderResponse.objects.filter(executor=executor_profile, attached=True)
-    orders_completed = OrderResponse.objects.filter(executor=executor_profile, completed=True)
 
     assigned_orders_data = []
     for order_response in orders_assigned:
         assigned_order_data = OrderSerializer(order_response.order).data
         assigned_orders_data.append(assigned_order_data)
 
+    return Response({'assigned_orders': assigned_orders_data})
+
+@api_view(['GET'])
+@permission_classes([IsExecutorPermission])
+def executor_completed_view(request):
+    executor_profile = request.user.executor_profile
+
+    orders_completed = OrderResponse.objects.filter(executor=executor_profile, completed=True)
+
     completed_orders_data = []
     for order_response in orders_completed:
         completed_order_data = OrderSerializer(order_response.order).data
         completed_orders_data.append(completed_order_data)
 
-    return Response({
-        'assigned_orders': assigned_orders_data,
-        'completed_orders': completed_orders_data
-    })
+    return Response({'completed_orders': completed_orders_data})
 
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def executor_responses_view(request):
+    user = request.user
+    executor_profile = ExecutorProfile.objects.get(user=user)
+
+    # Получите все отклики, связанные с исполнителем
+    responses = OrderResponse.objects.filter(executor=executor_profile, attached=False, completed=False)
+
+    # Создайте список заказов, на которые откликнулся исполнитель
+    orders_data = []
+    for response in responses:
+        order_data = OrderSerializer(response.order).data
+        orders_data.append(order_data)
+
+    return Response({'executor_responses': orders_data})
 
 @api_view(['PATCH'])
-@permission_classes([permissions.IsAuthenticated])
+@permission_classes([IsExecutorPermission])
 def close_order_view(request, order_id):
     user = request.user
     try:
@@ -214,7 +243,7 @@ def close_order_view(request, order_id):
 
 @api_view(['POST'])
 @permission_classes([permissions.IsAuthenticated])
-def add_to_favorite(request, order_id):
+def add_to_favorite_view(request, order_id):
     user = request.user
     try:
         order = Order.objects.get(pk=order_id)
@@ -230,7 +259,7 @@ def add_to_favorite(request, order_id):
 
 @api_view(['DELETE'])
 @permission_classes([permissions.IsAuthenticated])
-def remove_from_favorite(request, order_id):
+def remove_from_favorite_view(request, order_id):
     user = request.user
     try:
         order = Order.objects.get(pk=order_id)
@@ -247,7 +276,7 @@ def remove_from_favorite(request, order_id):
 
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated])
-def favorite_orders_list(request):
+def executor_favorite_view(request):
     user = request.user
     favorite_orders = FavoriteOrder.objects.filter(executor=user.executor_profile)
     favorite_order_ids = favorite_orders.values_list('order_id', flat=True)
