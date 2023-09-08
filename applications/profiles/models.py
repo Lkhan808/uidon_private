@@ -1,11 +1,6 @@
-import datetime
-
-import django.utils.timezone
-
 from applications.qualifications.models import Skill
 from applications.users.models import User
 from django.db import models
-from django.db.models import Count, Avg
 
 
 class BaseProfile(models.Model):

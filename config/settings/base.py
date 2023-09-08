@@ -30,7 +30,9 @@ INSTALLED_APPS = [
     'applications.qualifications',
     'rest_framework_simplejwt',
     'drf_spectacular',
+    'rest_framework_social_oauth2',
 ]
+
 
 AUTH_USER_MODEL = 'users.User'
 
@@ -129,7 +131,7 @@ SOCIALACCOUNT_PROVIDERS = {
 
 
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=45),
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=180),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
     "ROTATE_REFRESH_TOKENS": False,
     "BLACKLIST_AFTER_ROTATION": False,
@@ -226,3 +228,7 @@ JAZZMIN_SETTINGS = {
     "changeform_format_overrides": {"auth.user": "collapsible", "auth.group": "vertical_tabs"},
     "language_chooser": False,
 }
+
+
+SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = env('CLIENT_ID')
+SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = env('CLIENT_SECRET')

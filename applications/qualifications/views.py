@@ -1,5 +1,5 @@
-from rest_framework import status
-from rest_framework.decorators import api_view
+from rest_framework import status, permissions
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from .models import Skill, Language, Education, Contact, Portfolio
 from .serializers import (
@@ -21,7 +21,6 @@ def skill_list_create_view(request):
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-
 @api_view(["GET", "PUT", "DELETE"])
 def skill_detail_view(request, pk):
     """ Детальный просмотр, обновление и удаление навыка """
@@ -39,8 +38,8 @@ def skill_detail_view(request, pk):
         skill.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-
 @api_view(["GET", "POST"])
+@permission_classes([permissions.IsAuthenticated])
 def language_list_create_view(request):
     if request.method == "GET":
         languages = Language.objects.all()
@@ -52,8 +51,8 @@ def language_list_create_view(request):
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-
 @api_view(["GET", "PUT", "DELETE"])
+@permission_classes([permissions.IsAuthenticated])
 def language_detail_view(request, pk):
     language = Language.objects.get(pk=pk)
     if request.method == "GET":
@@ -68,8 +67,8 @@ def language_detail_view(request, pk):
         language.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-
 @api_view(["GET", "POST"])
+@permission_classes([permissions.IsAuthenticated])
 def education_list_create_view(request):
     if request.method == "GET":
         educations = Education.objects.all()
@@ -81,8 +80,8 @@ def education_list_create_view(request):
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-
 @api_view(["GET", "PUT", "DELETE"])
+@permission_classes([permissions.IsAuthenticated])
 def education_detail_view(request, pk):
     education = Education.objects.get(pk=pk)
 
@@ -98,8 +97,8 @@ def education_detail_view(request, pk):
         education.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-
 @api_view(["GET", "POST"])
+@permission_classes([permissions.IsAuthenticated])
 def contact_list_create_view(request):
     if request.method == "GET":
         contacts = Contact.objects.all()
@@ -111,8 +110,8 @@ def contact_list_create_view(request):
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-
 @api_view(["GET", "PUT", "DELETE"])
+@permission_classes([permissions.IsAuthenticated])
 def contact_detail_view(request, pk):
     contact = Contact.objects.get(pk=pk)
 
@@ -128,8 +127,8 @@ def contact_detail_view(request, pk):
         contact.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-
 @api_view(["GET", "POST"])
+@permission_classes([permissions.IsAuthenticated])
 def portfolio_list_create_view(request):
     if request.method == "GET":
         portfolios = Portfolio.objects.all()
@@ -141,8 +140,8 @@ def portfolio_list_create_view(request):
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-
 @api_view(["GET", "PUT", "DELETE"])
+@permission_classes([permissions.IsAuthenticated])
 def portfolio_detail_view(request, pk):
     portfolio = Portfolio.objects.get(pk=pk)
 

@@ -5,13 +5,28 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from .models import Order, OrderResponse, FavoriteOrder
 from .serializers import OrderSerializer, OrderResponseSerializer
-from applications.profiles.models import ExecutorProfile, CustomerProfile
-from .decorators import require_executor
-from .permissions import IsCustomerOrReadOnly, IsExecutorPermission, IsCustomerPermission
+from applications.profiles.models import ExecutorProfile
+from .permissions import IsExecutorPermission, IsCustomerPermission
 
+
+@api_view(['GET'])
+def list_orders_view(request):
+    orders = Order.objects.filter(status='новый') # Фильтруем заказы по статусу "новый"
+    serializer = OrderSerializer(orders, many=True)
+    return Response(serializer.data)
+
+@api_view(['GET'])
+def order_detail_view(request, order_id):
+    try:
+        order = Order.objects.get(pk=order_id)
+    except Order.DoesNotExist:
+        return Response({'error': 'Заказ не найден'}, status=status.HTTP_404_NOT_FOUND)
+
+    serializer = OrderSerializer(order)
+    return Response(serializer.data)
 
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])  # Только аутентифицированные пользователи могут создавать заказы
+@permission_classes([IsCustomerPermission])  # Только аутентифицированные пользователи могут создавать заказы
 def create_order_view(request):
     user = request.user
 
@@ -35,55 +50,70 @@ def create_order_view(request):
         return Response({'error': 'Вы не являетесь заказчиком и не можете создавать заказы'}, status=status.HTTP_403_FORBIDDEN)
 
 
+@api_view(['PATCH', 'DELETE'])
+@permission_classes([IsCustomerPermission])
+def update_or_delete_order_view(request, order_id):
+    try:
+        order = Order.objects.get(pk=order_id)
+    except Order.DoesNotExist:
+        return Response({'error': 'Заказ не найден'}, status=status.HTTP_404_NOT_FOUND)
+
+    if request.method == 'PATCH':
+        serializer = OrderSerializer(order, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    elif request.method == 'DELETE':
+        order.delete()
+        return Response({'message': 'Заказ успешно удален'}, status=status.HTTP_204_NO_CONTENT)
+
+
 
 @api_view(['GET'])
-def list_orders_view(request):
-    orders = Order.objects.filter(status='новый') # Фильтруем заказы по статусу "новый"
-    serializer = OrderSerializer(orders, many=True)
+@permission_classes([IsCustomerPermission])
+def customer_order_all_list_view(request):
+    customer_all_orders = Order.objects.filter(customer=request.user.customer_profile)
+    serializer = OrderSerializer(customer_all_orders, many=True)
+
+    return Response(serializer.data)
+
+@api_view(['GET'])
+@permission_classes([IsCustomerPermission])
+def customer_order_active_list_view(request):
+    customer_active_orders = Order.objects.filter(customer=request.user.customer_profile, status='новый')
+    serializer = OrderSerializer(customer_active_orders, many=True)
+
     return Response(serializer.data)
 
 
 @api_view(['GET'])
 @permission_classes([IsCustomerPermission])
-def customer_orders_list_view(request):
-
-    # Получаем заказы, созданные этим заказчиком
-    customer_orders = Order.objects.filter(customer=request.user.customer_profile)
-    serializer = OrderSerializer(customer_orders, many=True)
-
-    return Response(serializer.data)
-
-
-@api_view(['GET'])
-@permission_classes([IsCustomerPermission])
-def customer_close_orders_list_view(request):
+def customer_order_close_list_view(request):
 
     customer_close_orders = Order.objects.filter(customer=request.user.customer_profile, status='закрыт')
     serializer = OrderSerializer(customer_close_orders, many=True)
 
     return Response(serializer.data)
 
+@api_view(['GET'])
+@permission_classes([IsCustomerPermission])
+def customer_order_progress_list_view(request):
 
-@api_view(['GET', 'PATCH', 'DELETE'])
-@permission_classes([IsCustomerOrReadOnly])  # Применяем наши разрешения
-def order_detail_view(request, order_id):
-    try:
-        order = Order.objects.get(pk=order_id)
-    except Order.DoesNotExist:
-        return Response({'error': 'Заказ не найден'}, status=status.HTTP_404_NOT_FOUND)
+    customer_progress_orders = Order.objects.filter(customer=request.user.customer_profile, status='в работе')
+    serializer = OrderSerializer(customer_progress_orders, many=True)
 
-    if request.method == 'GET':
-        serializer = OrderSerializer(order)
-        return Response(serializer.data)
-    elif request.method == 'PATCH':
-        serializer = OrderSerializer(order, data=request.data, partial=True)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    elif request.method == 'DELETE':
-        order.delete()
-        return Response({'message': 'Заказ успешно удален'}, status=status.HTTP_204_NO_CONTENT)
+    return Response(serializer.data)
+
+@api_view(['GET'])
+@permission_classes([IsCustomerPermission])
+def customer_order_without_responses_view(request):
+    customer_without_responses_orders = Order.objects.filter(customer=request.user.customer_profile, response_count=0)
+    serializer = OrderSerializer(customer_without_responses_orders, many=True)
+
+    return Response(serializer.data)
+
 
 
 
@@ -196,7 +226,7 @@ def executor_responses_view(request):
     executor_profile = ExecutorProfile.objects.get(user=user)
 
     # Получите все отклики, связанные с исполнителем
-    responses = OrderResponse.objects.filter(executor=executor_profile, attached=False, completed=False)
+    responses = OrderResponse.objects.filter(executor=executor_profile, order__status='новый')
 
     # Создайте список заказов, на которые откликнулся исполнитель
     orders_data = []
@@ -208,8 +238,9 @@ def executor_responses_view(request):
 
 @api_view(['PATCH'])
 @permission_classes([IsExecutorPermission])
-def close_order_view(request, order_id):
+def close_order_view(request):
     user = request.user
+    order_id = request.data.get('order_id')
     try:
         executor_profile = user.executor_profile
     except ExecutorProfile.DoesNotExist:
@@ -233,8 +264,12 @@ def close_order_view(request, order_id):
 
 @api_view(['POST'])
 @permission_classes([IsExecutorPermission])
-def add_to_favorite_view(request, order_id):
+def add_to_favorite_view(request):
     user = request.user
+    order_id = request.data.get('order_id')  # Извлекаем order_id из JSON в теле запроса
+    if not order_id:
+        return Response({'error': 'Идентификатор заказа обязателен'}, status=status.HTTP_400_BAD_REQUEST)
+
     try:
         order = Order.objects.get(pk=order_id)
     except Order.DoesNotExist:
@@ -246,11 +281,11 @@ def add_to_favorite_view(request, order_id):
     else:
         return Response({'message': 'Заказ уже находится в избранном'}, status=status.HTTP_400_BAD_REQUEST)
 
-
 @api_view(['DELETE'])
 @permission_classes([IsExecutorPermission])
-def remove_from_favorite_view(request, order_id):
+def remove_from_favorite_view(request):
     user = request.user
+    order_id = request.data.get('order_id')
     try:
         order = Order.objects.get(pk=order_id)
     except Order.DoesNotExist:

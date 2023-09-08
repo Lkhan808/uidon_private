@@ -6,37 +6,43 @@ from .views import (
     list_orders_view,
     list_responses_for_order_view,
     order_detail_view,
+    update_or_delete_order_view,
     close_order_view,
     add_to_favorite_view,
     remove_from_favorite_view,
     executor_favorite_view,
-    customer_orders_list_view,
-    customer_close_orders_list_view,
+    customer_order_active_list_view,
+    customer_order_close_list_view,
+    customer_order_progress_list_view,
+    customer_order_all_list_view,
+    customer_order_without_responses_view,
     executor_assigned_view,
     executor_completed_view,
     executor_responses_view
 )
 
 
-
-
 urlpatterns = [
-    path('create-order/', create_order_view, name='create-order'),
-    path('orders/', list_orders_view, name='list-orders'),
-    path('order/<int:order_id>/', order_detail_view, name='order-detail'),
 
-    path('order/<int:order_id>/responses/', list_responses_for_order_view, name='list-responses-for-order'),
-    path('order/<int:order_id>/assign-executor/', assign_executor_to_order_view, name='assign-executor-to-order'),
+    path('order/list/', list_orders_view),
+    path('order/<int:order_id>/detail/', order_detail_view),
 
-    path('executor/orders/favorite/list/', executor_favorite_view, name='executor-orders-favorite-list'),
-    path('executor/orders/response/list/', executor_responses_view, name='executor-orders-response-list'),
-    path('executor/orders/assigned/list/', executor_assigned_view, name='executor-orders-assigned-list'),
-    path('executor/orders/completed/list/', executor_completed_view, name='executor-orders-completed-list'),
-    path('executor/orders/<int:order_id>/close/', close_order_view, name='executor-orders-close'),
-    path('executor/add/order/respond/', create_order_response_view, name='create-order-response'),
-    path('executor/add/order/favorite/<int:order_id>/', add_to_favorite_view, name='executor-add-favorite'),
-    path('executor/delete/favorite/<int:order_id>/', remove_from_favorite_view, name='remove-executor-favorites'),
+    path('customer/create/order/', create_order_view),
+    path('customer/update-or-delete/order/<int:order_id>/', update_or_delete_order_view),
+    path('customer/order/assign-executor/<int:order_id>/', assign_executor_to_order_view),
+    path('customer/order/responses/list/<int:order_id>/', list_responses_for_order_view),
+    path('customer/order/all/list/', customer_order_all_list_view),
+    path('customer/order/active/list/', customer_order_active_list_view),
+    path('customer/order/close/list/', customer_order_close_list_view),
+    path('customer/order/progress/list/', customer_order_progress_list_view),
+    path('customer/order/without/responses/list/', customer_order_without_responses_view),
 
-    path('customer/orders/list/', customer_orders_list_view, name='customer-orders-list'),
-    path('customer/close/orders/list/', customer_close_orders_list_view, name='customer-close-orders-list'),
+    path('executor/orders/favorite/list/', executor_favorite_view),
+    path('executor/orders/responses/list/', executor_responses_view),
+    path('executor/orders/assigned/list/', executor_assigned_view),
+    path('executor/orders/completed/list/', executor_completed_view),
+    path('executor/orders/close/', close_order_view),
+    path('executor/add/order/response/', create_order_response_view),
+    path('executor/add/order/favorite/', add_to_favorite_view),
+    path('executor/delete/order/favorite/', remove_from_favorite_view),
 ]
