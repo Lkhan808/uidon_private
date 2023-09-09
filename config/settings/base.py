@@ -233,10 +233,6 @@ AUTHENTICATION_BACKENDS = [
     "allauth.account.auth_backends.AuthenticationBackend",
 ]
 
-GOOGLE_CLIENT_ID = '370984842451-mbp4hbkbg5kcdeu8rucndrdcc31765g3.apps.googleusercontent.com'
-GOOGLE_CLIENT_SECRET = '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'
-GOOGLE_REDIRECT_URI = 'http://127.0.0.1:8000/api/auth/google-callback/'
-
 SOCIALACCOUNT_LOGIN_ON_GET = True
 
 SOCIALACCOUNT_PROVIDERS = {

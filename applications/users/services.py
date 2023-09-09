@@ -1,12 +1,9 @@
-import json
-
 import requests
-
 from applications.users import models
 from applications.users.utils import generate_jwt_for_user, send_mail_for_user, send_mail_reset_password
 from rest_framework.exceptions import NotFound
 from django.db.models import Model
-
+from decouple import config as env
 
 class BaseService:
     model: Model
@@ -34,9 +31,22 @@ class UserService(BaseService):
         send_mail_reset_password(user=user)
 
     @classmethod
-    def get_user_info_from_google(cls, token):
-        payload = {"access_token": token}
-        user_info = requests.get(
-            "https://www.googleapis.com/oauth2/v1/userinfo", params=payload
-        )
-        return json.loads(user_info.text)
+    def get_user_info_from_google(cls, access_token):
+        user_info_url = 'https://www.googleapis.com/oauth2/v3/userinfo'
+        headers = {'Authorization': f'Bearer {access_token}'}
+        user_info_response = requests.get(user_info_url, headers=headers)
+        return user_info_response.json()
+
+    @classmethod
+    def exchange_code_for_tokens(cls, authorization_code):
+        token_url = 'https://oauth2.googleapis.com/token'
+        token_data = {
+            'code': authorization_code,
+            'client_id': env('GOOGLE_CLIENT_ID'),
+            'client_secret': env('GOOGLE_CLIENT_SECRET'),
+            'redirect_uri': env('GOOGLE_REDIRECT_URI'),
+            'grant_type': 'authorization_code'
+        }
+
+        response = requests.post(token_url, data=token_data)
+        return response

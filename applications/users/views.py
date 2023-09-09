@@ -146,20 +146,9 @@ def google_login(request):
                 data={"message": "Authorization code is missing"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        print(f"authorization_code: {authorization_code}")
         # Step 2: Exchange the authorization code for an access token and refresh token
-        token_url = 'https://oauth2.googleapis.com/token'
-        token_data = {
-            'code': authorization_code,
-            'client_id': base.GOOGLE_CLIENT_ID,
-            'client_secret': base.GOOGLE_CLIENT_SECRET,
-            'redirect_uri': base.GOOGLE_REDIRECT_URI,
-            'grant_type': 'authorization_code'
-        }
-
-        response = requests.post(token_url, data=token_data)
+        response = UserService.exchange_code_for_tokens(authorization_code=authorization_code)
         token_response = response.json()
-        print(f"token_response: {token_response}")
         if 'error' in token_response:
             return Response(
                 data={"message": token_response.get("error_description")},
@@ -170,17 +159,13 @@ def google_login(request):
         refresh_token = token_response.get('refresh_token')
 
         # Step 3: Use the access token to fetch user information
-        user_info_url = 'https://www.googleapis.com/oauth2/v3/userinfo'
-        headers = {'Authorization': f'Bearer {access_token}'}
-        user_info_response = requests.get(user_info_url, headers=headers)
-        user_info = user_info_response.json()
+        user_info = UserService.get_user_info_from_google(access_token=access_token)
 
         if 'error' in user_info:
             return Response(
                 data={"message": user_info.get("error_description")},
                 status=status.HTTP_401_UNAUTHORIZED,
             )
-        print(f"user_info: {user_info}")
         try:
             user = User.objects.get(email=user_info["email"])
         except User.DoesNotExist:
