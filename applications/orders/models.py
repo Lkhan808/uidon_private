@@ -39,6 +39,7 @@ class OrderResponse(models.Model):
     def __str__(self):
         return f"Ordering: {self.order} - Executor: {self.executor}"
 
+
 class FavoriteOrder(models.Model):
     executor = models.ForeignKey(ExecutorProfile, on_delete=models.CASCADE)
     order = models.ForeignKey(Order, on_delete=models.CASCADE)

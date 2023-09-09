@@ -13,13 +13,23 @@ from django.contrib.sessions.models import Session
 def executors_list_view(request: Request):
     """ Создание или список фрилансеров """
     if request.method == "GET":
-        search_param = request.query_params.get('search', '')
-        skill_param = request.query_params.get('skills', '')  # Получить параметр запроса "skills"
-        salary_type_param = request.query_params.get('salary_type', '')  # Получить параметр запроса "salary_type"
-        executors = ExecutorProfile.objects.filter(
-            Q(profession__icontains=search_param),
-            Q(profession__icontains=skill_param),
-            Q(profession__icontains=salary_type_param))
+        profession_param = request.query_params.get('profession', '')
+        skills_param = request.query_params.getlist('skills', [])  # Получить параметр запроса "skills" как список
+        salary_type_param = request.query_params.get('salary_method', '')  # Получить параметр запроса "salary_method"
+
+        # Создаем начальный queryset без фильтрации
+        executors = ExecutorProfile.objects.all()
+
+        # Применяем фильтрацию для каждого из параметров
+        if profession_param:
+            executors = executors.filter(Q(profession__icontains=profession_param))
+        if skills_param:
+            skills_filter = Q()
+            for skill in skills_param:
+                skills_filter |= Q(skills__name__icontains=skill)
+            executors = executors.filter(skills_filter)
+        if salary_type_param:
+            executors = executors.filter(Q(salary_method__icontains=salary_type_param))
         serializer = ExecutorSerializer(executors, many=True)
         return Response(data=serializer.data, status=status.HTTP_200_OK)
     else:
