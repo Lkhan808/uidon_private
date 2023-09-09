@@ -1,3 +1,7 @@
+import json
+
+import requests
+
 from applications.users import models
 from applications.users.utils import generate_jwt_for_user, send_mail_for_user, send_mail_reset_password
 from rest_framework.exceptions import NotFound
@@ -29,10 +33,10 @@ class UserService(BaseService):
         user = cls.model.objects.get(email=email)
         send_mail_reset_password(user=user)
 
-    # @classmethod
-    # def get_user_info_from_google(cls, token, refresh_token):
-    #     payload = {"access_token": token, "refresh_token": refresh_token}
-    #     user_info = requests.get(
-    #         "https://www.googleapis.com/oauth2/v2/userinfo", params=payload
-    #     )
-    #     return json.loads(user_info.text)
+    @classmethod
+    def get_user_info_from_google(cls, token):
+        payload = {"access_token": token}
+        user_info = requests.get(
+            "https://www.googleapis.com/oauth2/v1/userinfo", params=payload
+        )
+        return json.loads(user_info.text)

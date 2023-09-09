@@ -1,10 +1,14 @@
-from django.contrib.auth.hashers import check_password
+import requests
+from django.contrib.auth.hashers import check_password, make_password
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.encoding import force_str
 from django.utils.http import urlsafe_base64_decode
 from rest_framework import status, permissions
 from rest_framework.response import Response
 from rest_framework.request import Request
+from rest_framework.views import APIView
+
+from applications.users.managers import UserManager
 from applications.users.models import User
 from applications.users.serializers import SignUpSerializer, SignInSerializer, UserSerializer, PasswordResetSerializer, \
     ChangePassswordSerializer
@@ -13,6 +17,8 @@ from applications.users.services import UserService
 from django.contrib.auth import authenticate
 from applications.users.utils import generate_jwt_for_user
 from rest_framework.decorators import api_view, permission_classes
+
+from config.settings import base
 
 
 @api_view(["POST"])
@@ -128,3 +134,62 @@ def change_email_view(request):
         else:
             return Response(data="new email is unreached or new email is similar with old email")
     return Response(data='email changed successfully', status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+def google_login(request):
+    password = make_password(UserManager().make_random_password())
+    if request.method == 'POST':
+        authorization_code = request.query_params.get('code')
+        if not authorization_code:
+            return Response(
+                data={"message": "Authorization code is missing"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        print(f"authorization_code: {authorization_code}")
+        # Step 2: Exchange the authorization code for an access token and refresh token
+        token_url = 'https://oauth2.googleapis.com/token'
+        token_data = {
+            'code': authorization_code,
+            'client_id': base.GOOGLE_CLIENT_ID,
+            'client_secret': base.GOOGLE_CLIENT_SECRET,
+            'redirect_uri': base.GOOGLE_REDIRECT_URI,
+            'grant_type': 'authorization_code'
+        }
+
+        response = requests.post(token_url, data=token_data)
+        token_response = response.json()
+        print(f"token_response: {token_response}")
+        if 'error' in token_response:
+            return Response(
+                data={"message": token_response.get("error_description")},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+
+        access_token = token_response.get('access_token')
+        refresh_token = token_response.get('refresh_token')
+
+        # Step 3: Use the access token to fetch user information
+        user_info_url = 'https://www.googleapis.com/oauth2/v3/userinfo'
+        headers = {'Authorization': f'Bearer {access_token}'}
+        user_info_response = requests.get(user_info_url, headers=headers)
+        user_info = user_info_response.json()
+
+        if 'error' in user_info:
+            return Response(
+                data={"message": user_info.get("error_description")},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+        print(f"user_info: {user_info}")
+        try:
+            user = User.objects.get(email=user_info["email"])
+        except User.DoesNotExist:
+            user = User.objects.create_user(
+                email=user_info["email"],
+                password=password,
+                role=request.data.get('role')
+            )
+            user.is_active = True
+            user.save()
+        return Response(data={"tokens": generate_jwt_for_user(user), "user_info": UserSerializer(user).data},
+                        status=status.HTTP_201_CREATED)
