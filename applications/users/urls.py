@@ -7,7 +7,8 @@ from .views import (
     password_reset,
     password_reset_confirm,
     change_password_view,
-    change_email_view
+    change_email_view,
+    google_login
 )
 
 urlpatterns = [
@@ -21,6 +22,8 @@ urlpatterns = [
     path('password-reset/confirm/<str:uid>/<str:token>/', password_reset_confirm, name='password-reset-update'),
 
     path('change-password/', change_password_view, name='change-password'),
-    path('change-email/', change_email_view, name='change-email')
+    path('change-email/', change_email_view, name='change-email'),
+
+    path('google-callback/', google_login, name='google-auth')
 ]
 

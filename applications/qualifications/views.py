@@ -38,6 +38,7 @@ def skill_detail_view(request, pk):
         skill.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+
 @api_view(["GET", "POST"])
 @permission_classes([permissions.IsAuthenticated])
 def language_list_create_view(request):
@@ -46,6 +47,12 @@ def language_list_create_view(request):
         serializer = LanguageSerializer(languages, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
     elif request.method == "POST":
+        # Получите текущего исполнителя (предполагается, что он авторизован)
+        executor = request.user.executor_profile
+
+        # Добавьте исполнителя в данные запроса перед созданием языка
+        request.data["executor"] = executor.id
+
         serializer = LanguageSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
@@ -67,35 +74,6 @@ def language_detail_view(request, pk):
         language.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-@api_view(["GET", "POST"])
-@permission_classes([permissions.IsAuthenticated])
-def education_list_create_view(request):
-    if request.method == "GET":
-        educations = Education.objects.all()
-        serializer = EducationSerializer(educations, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-    elif request.method == "POST":
-        serializer = EducationSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-@api_view(["GET", "PUT", "DELETE"])
-@permission_classes([permissions.IsAuthenticated])
-def education_detail_view(request, pk):
-    education = Education.objects.get(pk=pk)
-
-    if request.method == "GET":
-        serializer = EducationSerializer(education)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-    elif request.method == "PUT":
-        serializer = EducationSerializer(education, data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_200_OK)
-    elif request.method == "DELETE":
-        education.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
 
 @api_view(["GET", "POST"])
 @permission_classes([permissions.IsAuthenticated])
@@ -105,6 +83,12 @@ def contact_list_create_view(request):
         serializer = ContactSerializer(contacts, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
     elif request.method == "POST":
+        # Получите текущего исполнителя (предполагается, что он авторизован)
+        executor = request.user.executor_profile
+
+        # Добавьте исполнителя в данные запроса перед созданием контакта
+        request.data["executor"] = executor.id
+
         serializer = ContactSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
@@ -127,6 +111,7 @@ def contact_detail_view(request, pk):
         contact.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+
 @api_view(["GET", "POST"])
 @permission_classes([permissions.IsAuthenticated])
 def portfolio_list_create_view(request):
@@ -135,6 +120,12 @@ def portfolio_list_create_view(request):
         serializer = PortfolioSerializer(portfolios, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
     elif request.method == "POST":
+        # Получите текущего исполнителя (предполагается, что он авторизован)
+        executor = request.user.executor_profile
+
+        # Добавьте исполнителя в данные запроса перед созданием портфолио
+        request.data["executor"] = executor.id
+
         serializer = PortfolioSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()

@@ -1,10 +1,14 @@
-from django.contrib.auth.hashers import check_password
+from django.contrib.auth.hashers import check_password, make_password
 from django.contrib.auth.tokens import default_token_generator
+from django.http import HttpResponseRedirect
+from django.shortcuts import redirect
 from django.utils.encoding import force_str
 from django.utils.http import urlsafe_base64_decode
 from rest_framework import status, permissions
 from rest_framework.response import Response
 from rest_framework.request import Request
+
+from applications.users.managers import UserManager
 from applications.users.models import User
 from applications.users.serializers import SignUpSerializer, SignInSerializer, UserSerializer, PasswordResetSerializer, \
     ChangePassswordSerializer
@@ -128,3 +132,58 @@ def change_email_view(request):
         else:
             return Response(data="new email is unreached or new email is similar with old email")
     return Response(data='email changed successfully', status=status.HTTP_200_OK)
+
+
+
+
+@api_view(['GET'])
+def google_login(request):
+    password = make_password(UserManager().make_random_password())
+    if request.method == 'GET':
+        authorization_code = request.query_params.get('code')
+        if not authorization_code:
+            return Response(
+                data={"message": "Authorization code is missing"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        # Step 2: Exchange the authorization code for an access token and refresh token
+        response = UserService.exchange_code_for_tokens(authorization_code=authorization_code)
+        token_response = response.json()
+        if 'error' in token_response:
+            return Response(
+                data={"message": token_response.get("error_description")},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+
+        access_token = token_response.get('access_token')
+        refresh_token = token_response.get('refresh_token')
+
+        # Step 3: Use the access token to fetch user information
+        user_info = UserService.get_user_info_from_google(access_token=access_token)
+
+        if 'error' in user_info:
+            return Response(
+                data={"message": user_info.get("error_description")},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+        try:
+            user = User.objects.get(email=user_info["email"])
+        except User.DoesNotExist:
+            user = User.objects.create_user(
+                email=user_info["email"],
+                password=password,
+                role=request.data.get('role')
+            )
+            user.is_active = True
+            user.save()
+
+            # Включите токены в URL для перенаправления
+        jwt_tokens = generate_jwt_for_user(user)
+        redirect_url = f'http://localhost:8003/?access_token={jwt_tokens["access"]}&refresh_token={jwt_tokens["refresh"]}&role={user.role}/'
+        return HttpResponseRedirect(redirect_url)
+
+    # Если не выполнилось условие request.method == 'GET'
+    return Response(
+        data={"message": "Invalid request method"},
+        status=status.HTTP_405_METHOD_NOT_ALLOWED,
+    )

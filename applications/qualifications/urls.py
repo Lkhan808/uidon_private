@@ -8,9 +8,6 @@ urlpatterns = [
     path('languages/', views.language_list_create_view),
     path('languages/<int:pk>/', views.language_detail_view),
 
-    path('educations/', views.education_list_create_view),
-    path('educations/<int:pk>/', views.education_detail_view),
-
     path('contacts/', views.contact_list_create_view),
     path('contacts/<int:pk>/', views.contact_detail_view),
 

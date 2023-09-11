@@ -39,10 +39,6 @@ class ExecutorProfile(BaseProfile):
         ("Не указано", "Не указано"),
     )
 
-    EDUCATION_CHOICES = (
-        ("Среднее", "Среднее"),
-        ("Высшее", "Высшее"),
-    )
     PAYMENT_METHOD_CHOICES = (
         ('почасовая', 'почасовая'),
         ('оклад', 'оклад'),
@@ -54,7 +50,6 @@ class ExecutorProfile(BaseProfile):
     profession = models.CharField(max_length=150)
     salary_method = models.CharField(max_length=50, choices=PAYMENT_METHOD_CHOICES, null=True)
     salary = models.DecimalField(max_digits=10, decimal_places=2)
-    education_level = models.CharField(max_length=15, choices=EDUCATION_CHOICES)
     skills = models.ManyToManyField(Skill)
     view_count = models.PositiveIntegerField(default=0)
     user = models.OneToOneField(
