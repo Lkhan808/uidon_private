@@ -3,9 +3,10 @@ from django.db import models
 
 class FeedbackOnExecutor(models.Model):
     RATING_CHOICES = ((i, i * '*') for i in range(1, 6))
-
     rating = models.PositiveSmallIntegerField(choices=RATING_CHOICES)
     description = models.TextField(max_length=200, null=True)
+    create_date = models.DateTimeField(auto_now_add=True)
+    order_id = models.IntegerField()
 
     customer = models.ForeignKey(
         CustomerProfile,
@@ -30,9 +31,10 @@ class FeedbackOnExecutor(models.Model):
 
 class FeedbackOnCustomer(models.Model):
     RATING_CHOICES = ((i, i * '*') for i in range(1, 6))
-
     rating = models.PositiveSmallIntegerField(choices=RATING_CHOICES)
     description = models.TextField(max_length=200, null=True)
+    create_date = models.DateTimeField(auto_now_add=True)
+    order_id = models.IntegerField()
 
     executor = models.ForeignKey(
         ExecutorProfile,
