@@ -21,7 +21,7 @@ urlpatterns = [
     path("executor/create/", executor_create_view),
     path("executor/update-or-delete/", executor_path_delete_view),
 
-    path("customers/", customer_list_view),
+    path("customer/list/", customer_list_view),
     path("customer/<int:pk>/", customers_detail_view),
     path("customer/create/", customer_create_view),
     path("customer/update-or-delete/", customer_path_delete_view),

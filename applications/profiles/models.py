@@ -1,3 +1,4 @@
+from django.db.models import Avg, Count
 from applications.qualifications.models import Skill
 from applications.users.models import User
 from django.db import models
@@ -31,6 +32,18 @@ class CustomerProfile(BaseProfile):
     class Meta:
         db_table = 'customers'
 
+    def get_average_rating(self):
+        # Получаем средний рейтинг
+        average_rating = self.feedbacks_on_customer.aggregate(Avg('rating'))['rating__avg'] or 0
+
+        return average_rating if average_rating is not None else 0
+
+    def get_feedback_count(self):
+        # Получаем количество отзывов
+        feedback_count = self.feedbacks_on_customer.aggregate(Count('id'))['id__count'] or 0
+
+        return feedback_count
+
 
 class ExecutorProfile(BaseProfile):
     GENDER_CHOICES = (
@@ -60,6 +73,19 @@ class ExecutorProfile(BaseProfile):
 
     class Meta:
         db_table = 'executors'
+
+
+    def get_average_rating(self):
+        # Получаем средний рейтинг
+        average_rating = self.feedbacks_on_executor.aggregate(Avg('rating'))['rating__avg'] or 0
+
+        return average_rating if average_rating is not None else 0
+
+    def get_feedback_count(self):
+        # Получаем количество отзывов
+        feedback_count = self.feedbacks_on_customer.aggregate(Count('id'))['id__count'] or 0
+
+        return feedback_count
 
 
 class ProfileView(models.Model):

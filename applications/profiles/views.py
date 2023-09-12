@@ -22,6 +22,11 @@ def executor_detail_view(request: Request, pk):
     # Получить профиль пользователя, который просматривается
     profile_user = executor_profile.user
 
+    if not current_user.is_authenticated:
+        # Если пользователь не авторизован, вернуть общие данные о фрилансере
+        serializer = ExecutorProfileSerializer(executor_profile)
+        return Response(serializer.data)
+
     if current_user.role == 'customer':
         # Проверить, является ли текущий пользователь автором профиля
         is_owner = current_user == profile_user
@@ -34,6 +39,7 @@ def executor_detail_view(request: Request, pk):
 
     serializer = ExecutorProfileSerializer(executor_profile)
     return Response(serializer.data)
+
 
 @api_view(["POST"])
 @permission_classes([permissions.IsAuthenticated])
@@ -70,11 +76,13 @@ def customer_list_view(request):
     serializer = CustomerSerializer(customers, many=True)
     return Response(data=serializer.data, status=status.HTTP_200_OK)
 
+
 @api_view(["GET"])
 def customers_detail_view(request: Request, pk):
     customer = CustomerProfile.objects.get(pk=pk)
-    serializer = CustomerSerializer(customer)
+    serializer = CustomerProfileSerializer(customer)
     return Response(data=serializer.data, status=status.HTTP_200_OK)
+
 
 @api_view(["POST"])
 @permission_classes([permissions.IsAuthenticated])
