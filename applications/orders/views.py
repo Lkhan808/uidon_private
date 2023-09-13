@@ -4,7 +4,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from .models import Order, OrderResponse, FavoriteOrder
-from .serializers import OrderSerializer, OrderResponseSerializer
+from .serializers import OrderSerializer, OrderResponseSerializer, OrderListSerializer
 from applications.profiles.models import ExecutorProfile
 from .permissions import IsExecutorPermission, IsCustomerPermission
 
@@ -12,7 +12,7 @@ from .permissions import IsExecutorPermission, IsCustomerPermission
 @api_view(['GET'])
 def list_orders_view(request):
     orders = Order.objects.filter(status='новый') # Фильтруем заказы по статусу "новый"
-    serializer = OrderSerializer(orders, many=True)
+    serializer = OrderListSerializer(orders, many=True)
     return Response(serializer.data)
 
 @api_view(['GET'])

@@ -1,9 +1,9 @@
 from rest_framework import status, permissions
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
-from .models import Skill, Language, Education, Contact, Portfolio
+from .models import Skill, Language, Contact, Portfolio
 from .serializers import (
-    SkillSerializer, LanguageSerializer, EducationSerializer,
+    SkillSerializer, LanguageSerializer,
     ContactSerializer, PortfolioSerializer
 )
 

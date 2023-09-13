@@ -3,7 +3,13 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.request import Request
 from rest_framework.response import Response
 from applications.profiles.models import ExecutorProfile, CustomerProfile, ProfileView
-from applications.profiles.serializers import ExecutorSerializer, CustomerSerializer, ExecutorProfileSerializer, CustomerProfileSerializer
+from applications.profiles.serializers import (
+    ExecutorSerializer,
+    CustomerSerializer,
+    ExecutorProfileSerializer,
+    CustomerProfileSerializer,
+    ExecutorListSerializer,
+)
 from .permissions import IsCustomerPermission, IsExecutorPermission
 
 
@@ -11,7 +17,7 @@ from .permissions import IsCustomerPermission, IsExecutorPermission
 def executor_list_view(request):
     """ Список фрилансеров """
     executors = ExecutorProfile.objects.all()
-    serializer = ExecutorSerializer(executors, many=True)
+    serializer = ExecutorListSerializer(executors, many=True)
     return Response(data=serializer.data, status=status.HTTP_200_OK)
 
 @api_view(["GET"])

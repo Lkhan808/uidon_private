@@ -26,24 +26,6 @@ class Language(models.Model):
         return self.value
 
 
-class Education(models.Model):
-    graduation_date = models.DateField()
-    university = models.CharField(max_length=150)
-    faculty = models.CharField(max_length=150)
-    executor = models.ForeignKey(
-        "profiles.ExecutorProfile",
-        on_delete=models.CASCADE,
-        related_name="educations"
-    )
-
-    class Meta:
-        db_table = "educations"
-
-    def __str__(self):
-        return (f"Университет: {self.university} Факультет: {self.faculty} "
-                f"Дата окончания: {self.graduation_date}")
-
-
 class Contact(models.Model):
     value = models.TextField(max_length=200)
     executor = models.ForeignKey(
