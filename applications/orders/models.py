@@ -14,7 +14,7 @@ class Order(models.Model):
         ('оклад', 'оклад'),
     )
 
-    title = models.CharField(max_length=200)
+    title = models.CharField(max_length=400)
     description = models.TextField()
     payment_method = models.CharField(max_length=10, choices=PAYMENT_METHOD_CHOICES)
     price = models.IntegerField()

@@ -166,29 +166,28 @@ def list_responses_for_order_view(request, order_id):
 @api_view(['PUT'])
 @permission_classes([IsCustomerPermission])
 def assign_executor_to_order_view(request, order_id):
+    try:
+        order = Order.objects.get(pk=order_id, executor__isnull=True, status='новый')
+    except Order.DoesNotExist:
+        return Response({'error': 'Заказ не найден или уже в работе'}, status=status.HTTP_404_NOT_FOUND)
+
     executor_id = request.data.get('executor_id')
     if not executor_id:
         return Response({'error': 'Не указан ID исполнителя'}, status=status.HTTP_400_BAD_REQUEST)
 
     try:
-        order = Order.objects.select_for_update().get(pk=order_id)
         executor = ExecutorProfile.objects.get(id=executor_id)
-    except Order.DoesNotExist:
-        return Response({'error': 'Заказ не найден'}, status=status.HTTP_404_NOT_FOUND)
     except ExecutorProfile.DoesNotExist:
         return Response({'error': 'Исполнитель с указанным ID не найден'}, status=status.HTTP_404_NOT_FOUND)
 
-    if order.executor:
-        return Response({'error': 'Исполнитель уже назначен на этот заказ'}, status=status.HTTP_400_BAD_REQUEST)
+    order.executor = executor
+    order.status = 'в работе'
+    order.save()
 
-    with transaction.atomic():
-        order.executor = executor
-        order.status = 'в работе'
-        order.save()
+    # Установить attached в True для всех связанных объектов OrderResponse
+    OrderResponse.objects.filter(order=order).update(attached=True)
 
-        OrderResponse.objects.create(order=order, executor=executor, attached=True)
-
-    return Response({'message': 'Исполнитель назначен на заказ'})
+    return Response({'message': 'Исполнитель назначен на заказ'}, status=status.HTTP_200_OK)
 
 
 @api_view(['GET'])
@@ -251,10 +250,11 @@ def close_order_view(request):
         order.status = 'закрыт'
         order.save()
 
-        order_response = OrderResponse.objects.get(order=order, executor=executor_profile)
-        order_response.completed = True
-        order_response.attached = False  # Убираем из assigned_orders
-        order_response.save()
+        order_responses = OrderResponse.objects.filter(order=order, executor=executor_profile)
+        for order_response in order_responses:
+            order_response.completed = True
+            order_response.attached = False
+            order_response.save()
 
 
         return Response(data="Заказ закрыт", status=status.HTTP_200_OK)

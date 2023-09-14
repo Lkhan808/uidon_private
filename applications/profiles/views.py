@@ -1,3 +1,4 @@
+from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import status, permissions
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.request import Request
@@ -22,8 +23,11 @@ def executor_list_view(request):
 
 @api_view(["GET"])
 def executor_detail_view(request: Request, pk):
-    """ Детальный просмотр фрилансера """
-    executor_profile = ExecutorProfile.objects.get(pk=pk)
+    try:
+        executor_profile = ExecutorProfile.objects.get(pk=pk)
+    except ObjectDoesNotExist:
+        return Response({"message": "Исполнитель с таким ID не существует"}, status=status.HTTP_404_NOT_FOUND)
+
     current_user = request.user
     # Получить профиль пользователя, который просматривается
     profile_user = executor_profile.user

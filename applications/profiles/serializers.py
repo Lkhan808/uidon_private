@@ -8,7 +8,6 @@ class ExecutorSerializer(serializers.ModelSerializer):
     contacts = ContactSerializer(many=True, required=False)
     languages = LanguageSerializer(many=True, required=False)
     portfolios = PortfolioSerializer(many=True, required=False)
-    average_rating = serializers.SerializerMethodField()
     class Meta:
         model = ExecutorProfile
         fields = "__all__"
