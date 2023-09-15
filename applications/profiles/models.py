@@ -23,6 +23,7 @@ class BaseProfile(models.Model):
 
 
 class CustomerProfile(BaseProfile):
+    order_count = models.PositiveIntegerField(default=0)
     user = models.OneToOneField(
         User,
         on_delete=models.CASCADE,
@@ -65,6 +66,7 @@ class ExecutorProfile(BaseProfile):
     salary = models.DecimalField(max_digits=10, decimal_places=2)
     skills = models.ManyToManyField(Skill)
     view_count = models.PositiveIntegerField(default=0)
+    favorite_count = models.PositiveIntegerField(default=0)
     user = models.OneToOneField(
         User,
         on_delete=models.CASCADE,

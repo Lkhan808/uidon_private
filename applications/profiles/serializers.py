@@ -11,6 +11,9 @@ class ExecutorListSerializer(serializers.ModelSerializer):
         model = ExecutorProfile
         fields = ["id", "full_name", "avatar", "location", "biography", "profession", "salary_method", "salary", "skills", "average_rating"]
 
+    def get_average_rating(self, obj):
+        return obj.get_average_rating()
+
 class ExecutorProfileSerializer(serializers.ModelSerializer):
     contacts = ContactSerializer(many=True, required=False)
     languages = LanguageSerializer(many=True, required=False)
