@@ -1,4 +1,5 @@
 from applications.profiles.models import ExecutorProfile, CustomerProfile
+from applications.orders.models import Order
 from django.db import models
 
 class FeedbackOnExecutor(models.Model):
@@ -6,7 +7,13 @@ class FeedbackOnExecutor(models.Model):
     rating = models.PositiveSmallIntegerField(choices=RATING_CHOICES)
     description = models.TextField(max_length=200, null=True)
     create_date = models.DateTimeField(auto_now_add=True)
-    order_id = models.IntegerField()
+    order_id = models.ForeignKey(
+        Order,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="feedbacks_on_executor"
+    )
 
     customer = models.ForeignKey(
         CustomerProfile,
@@ -21,7 +28,7 @@ class FeedbackOnExecutor(models.Model):
     )
 
     class Meta:
-        unique_together = ('customer', 'executor')
+        unique_together = ('customer', 'executor', 'order_id')
         db_table = "feedbacks_on_executor"
 
 
@@ -34,7 +41,14 @@ class FeedbackOnCustomer(models.Model):
     rating = models.PositiveSmallIntegerField(choices=RATING_CHOICES)
     description = models.TextField(max_length=200, null=True)
     create_date = models.DateTimeField(auto_now_add=True)
-    order_id = models.IntegerField()
+
+    order_id = models.ForeignKey(
+        Order,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="feedbacks_on_customer"
+    )
 
     executor = models.ForeignKey(
         ExecutorProfile,
@@ -49,7 +63,7 @@ class FeedbackOnCustomer(models.Model):
     )
 
     class Meta:
-        unique_together = ('executor', 'customer')
+        unique_together = ('executor', 'customer', 'order_id')
         db_table = "feedbacks_on_customer"
 
     def __str__(self):

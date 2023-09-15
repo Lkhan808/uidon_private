@@ -4,5 +4,5 @@ from .views import create_feedback_on_customer, create_feedback_on_executor, my_
 urlpatterns = [
     path('create_feedback_on_customer/', create_feedback_on_customer),
     path('create_feedback_on_executor/', create_feedback_on_executor),
-    path('my_feedbacks_view/', my_feedbacks_view),
+    path('my-feedbacks/list/', my_feedbacks_view),
 ]

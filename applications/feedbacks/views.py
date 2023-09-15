@@ -9,7 +9,10 @@ from .models import FeedbackOnCustomer, FeedbackOnExecutor
 @api_view(["POST"])
 @permission_classes([IsCustomerPermission])
 def create_feedback_on_executor(request):
-    serializer = FeedbackOnExecutorSerializer(data=request.data)
+    customer = request.user.customer_profile
+    feedback_data = request.data.copy()
+    feedback_data["customer"] = customer.id
+    serializer = FeedbackOnExecutorSerializer(data=feedback_data)
     serializer.is_valid(raise_exception=True)
     serializer.save()
     return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -17,13 +20,9 @@ def create_feedback_on_executor(request):
 @api_view(["POST"])
 @permission_classes([IsExecutorPermission])
 def create_feedback_on_customer(request):
-    # Получить текущего исполнителя (предполагается, что вы авторизованы как исполнитель)
     executor = request.user.executor_profile
-
-    # Добавить executor к данным обратной связи перед созданием
     feedback_data = request.data.copy()
-    feedback_data["executor"] = executor.id  # Подставить id исполнителя
-
+    feedback_data["executor"] = executor.id
     serializer = FeedbackOnCustomerSerializer(data=feedback_data)
     serializer.is_valid(raise_exception=True)
     serializer.save()

@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from .models import Order, OrderResponse, FavoriteOrder
-from applications.profiles.serializers import ExecutorSerializer
+from applications.profiles.serializers import ExecutorCRUDSerializer
 from applications.qualifications.serializers import SkillSerializer
 
 
@@ -16,7 +16,7 @@ class OrderListSerializer(serializers.ModelSerializer):
         exclude = ['executor']
 
 class OrderResponseSerializer(serializers.ModelSerializer):
-    executor = ExecutorSerializer()
+    executor = ExecutorCRUDSerializer()
     class Meta:
         model = OrderResponse
         fields = '__all__'

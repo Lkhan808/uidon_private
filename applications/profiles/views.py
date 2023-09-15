@@ -4,14 +4,14 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.request import Request
 from rest_framework.response import Response
 from applications.profiles.models import ExecutorProfile, CustomerProfile, ProfileView
+from .permissions import IsCustomerPermission, IsExecutorPermission
 from applications.profiles.serializers import (
-    ExecutorSerializer,
-    CustomerSerializer,
+    ExecutorListSerializer,
+    ExecutorCRUDSerializer,
     ExecutorProfileSerializer,
     CustomerProfileSerializer,
-    ExecutorListSerializer,
+    CustomerCRUDSerializer,
 )
-from .permissions import IsCustomerPermission, IsExecutorPermission
 
 
 @api_view(["GET"])
@@ -59,7 +59,7 @@ def executor_create_view(request):
     data = request.data.copy()
     data['user'] = user_id
 
-    serializer = ExecutorSerializer(data=data)
+    serializer = ExecutorCRUDSerializer(data=data)
     serializer.is_valid(raise_exception=True)
     serializer.save()
     return Response(data=serializer.data, status=status.HTTP_201_CREATED)
@@ -71,7 +71,7 @@ def executor_path_delete_view(request: Request, pk):
     executor_profile = ExecutorProfile.objects.get(pk=pk)
 
     if request.method == "PATCH":
-        serializer = ExecutorSerializer(executor_profile, data=request.data, partial=True)
+        serializer = ExecutorCRUDSerializer(executor_profile, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(data=serializer.data, status=status.HTTP_200_OK)
@@ -83,7 +83,7 @@ def executor_path_delete_view(request: Request, pk):
 @api_view(["GET"])
 def customer_list_view(request):
     customers = CustomerProfile.objects.all()
-    serializer = CustomerSerializer(customers, many=True)
+    serializer = CustomerCRUDSerializer(customers, many=True)
     return Response(data=serializer.data, status=status.HTTP_200_OK)
 
 
@@ -102,7 +102,7 @@ def customer_create_view(request):
     data = request.data.copy()
     data['user'] = user_id
 
-    serializer = CustomerSerializer(data=data)
+    serializer = CustomerCRUDSerializer(data=data)
     serializer.is_valid(raise_exception=True)
     serializer.save()
     return Response(data=serializer.data, status=status.HTTP_201_CREATED)
@@ -113,7 +113,7 @@ def customer_path_delete_view(request: Request, pk):
     customer = CustomerProfile.objects.get(pk=pk)
 
     if request.method == "PUT":
-        serializer = CustomerSerializer(data=request.data)
+        serializer = CustomerCRUDSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(data=serializer.data, status=status.HTTP_200_OK)
