@@ -123,12 +123,12 @@ def customer_create_view(request):
     serializer.save()
     return Response(data=serializer.data, status=status.HTTP_201_CREATED)
 
-@api_view(["DELETE", "PUT"])
+@api_view(["DELETE", "PATCH"])
 @permission_classes([IsCustomerPermission])
 def customer_path_delete_view(request: Request, pk):
     customer = CustomerProfile.objects.get(pk=pk)
 
-    if request.method == "PUT":
+    if request.method == "PATCH":
         serializer = CustomerCRUDSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
