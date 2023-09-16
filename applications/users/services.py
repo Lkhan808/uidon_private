@@ -63,3 +63,4 @@ class UserService(BaseService):
 
         response = requests.post(token_url, data=token_data)
         return response
+
