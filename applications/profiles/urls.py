@@ -19,11 +19,11 @@ urlpatterns = [
     path("executor/list/", executor_list_view),
     path("executor/<int:pk>/", executor_detail_view),
     path("executor/create/", executor_create_view),
-    path("executor/update-or-delete/", executor_path_delete_view),
+    path("executor/update-or-delete/<int:pk>/", executor_path_delete_view),
 
     path("customer/list/", customer_list_view),
     path("customer/<int:pk>/", customers_detail_view),
     path("customer/create/", customer_create_view),
-    path("customer/update-or-delete/", customer_path_delete_view),
+    path("customer/update-or-delete/<int:pk>/", customer_path_delete_view),
 
 ]
