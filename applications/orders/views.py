@@ -29,6 +29,7 @@ def order_detail_view(request, order_id):
 @permission_classes([IsCustomerPermission])  # Только аутентифицированные пользователи могут создавать заказы
 def create_order_view(request):
     user = request.user
+    customer_profile = user.customer_profile
 
     # Проверяем, является ли пользователь заказчиком (customer)
     if hasattr(user, 'customer_profile'):
@@ -40,7 +41,8 @@ def create_order_view(request):
             # Устанавливаем текущего пользователя как заказчика
             serializer.validated_data['customer'] = user.customer_profile
             order = Order(**serializer.validated_data)
-            CustomerProfile.order_count += 1
+            customer_profile.order_count += 1
+            customer_profile.save()
             order.save()
             order.skill.set(skill)
 
@@ -54,6 +56,7 @@ def create_order_view(request):
 @api_view(['PATCH', 'DELETE'])
 @permission_classes([IsCustomerPermission])
 def update_or_delete_order_view(request, order_id):
+    customer_profile = request.user.customer_profile
     try:
         order = Order.objects.get(pk=order_id)
     except Order.DoesNotExist:
@@ -67,7 +70,8 @@ def update_or_delete_order_view(request, order_id):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     elif request.method == 'DELETE':
-        CustomerProfile.order_count -= 1
+        customer_profile.order_count -= 1
+        customer_profile.save()
         order.delete()
         return Response({'message': 'Заказ успешно удален'}, status=status.HTTP_204_NO_CONTENT)
 
@@ -250,7 +254,8 @@ def close_order_view(request):
     try:
         order = Order.objects.get(pk=order_id, executor=executor_profile, status='в работе')
         order.status = 'закрыт'
-        ExecutorProfile.completed_order += 1
+        executor_profile.completed_order += 1
+        executor_profile.save()
         order.save()
 
         order_responses = OrderResponse.objects.filter(order=order, executor=executor_profile)
@@ -269,6 +274,7 @@ def close_order_view(request):
 @permission_classes([IsExecutorPermission])
 def add_to_favorite_view(request):
     user = request.user
+    executor_profile = user.executor_profile
     order_id = request.data.get('order_id')  # Извлекаем order_id из JSON в теле запроса
     if not order_id:
         return Response({'error': 'Идентификатор заказа обязателен'}, status=status.HTTP_400_BAD_REQUEST)
@@ -280,7 +286,8 @@ def add_to_favorite_view(request):
 
     favorite, created = FavoriteOrder.objects.get_or_create(executor=user.executor_profile, order=order)
     if created:
-        ExecutorProfile.favorite_count += 1
+        executor_profile.favorite_count += 1
+        executor_profile.save()
         return Response({'message': 'Заказ успешно добавлен в избранное'}, status=status.HTTP_201_CREATED)
     else:
         return Response({'message': 'Заказ уже находится в избранном'}, status=status.HTTP_400_BAD_REQUEST)
@@ -290,6 +297,7 @@ def add_to_favorite_view(request):
 def remove_from_favorite_view(request):
     user = request.user
     order_id = request.data.get('order_id')
+    executor_profile = user.executor_profile
     try:
         order = Order.objects.get(pk=order_id)
     except Order.DoesNotExist:
@@ -297,7 +305,8 @@ def remove_from_favorite_view(request):
 
     try:
         favorite = FavoriteOrder.objects.get(executor=user.executor_profile, order=order)
-        ExecutorProfile.favorite_count -= 1
+        executor_profile.favorite_count -= 1
+        executor_profile.save()
         favorite.delete()
         return Response({'message': 'Заказ успешно удален из избранного'}, status=status.HTTP_204_NO_CONTENT)
     except FavoriteOrder.DoesNotExist:
