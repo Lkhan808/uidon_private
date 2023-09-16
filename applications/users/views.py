@@ -1,6 +1,8 @@
 import requests
 from django.contrib.auth.hashers import check_password, make_password
 from django.contrib.auth.tokens import default_token_generator
+from django.http import HttpResponseRedirect
+from django.shortcuts import redirect
 from django.utils.encoding import force_str
 from django.utils.http import urlsafe_base64_decode
 from rest_framework import status, permissions
@@ -17,8 +19,6 @@ from applications.users.services import UserService
 from django.contrib.auth import authenticate
 from applications.users.utils import generate_jwt_for_user
 from rest_framework.decorators import api_view, permission_classes
-
-from config.settings import base
 
 
 @api_view(["POST"])
@@ -136,10 +136,10 @@ def change_email_view(request):
     return Response(data='email changed successfully', status=status.HTTP_200_OK)
 
 
-@api_view(['POST'])
+@api_view(['GET'])
 def google_login(request):
     password = make_password(UserManager().make_random_password())
-    if request.method == 'POST':
+    if request.method == 'GET':
         authorization_code = request.query_params.get('code')
         if not authorization_code:
             return Response(
@@ -176,5 +176,6 @@ def google_login(request):
             )
             user.is_active = True
             user.save()
-        return Response(data={"tokens": generate_jwt_for_user(user), "user_info": UserSerializer(user).data},
-                        status=status.HTTP_201_CREATED)
+        jwt_tokens = generate_jwt_for_user(user)
+        redirect_url = f'http://localhost:8003/?access_token={jwt_tokens["access"]}&refresh_token={jwt_tokens["refresh"]}'
+        return HttpResponseRedirect(redirect_url)
