@@ -6,6 +6,8 @@ from .permissions import IsCustomerPermission, IsExecutorPermission
 from .models import FeedbackOnCustomer, FeedbackOnExecutor
 
 
+
+
 @api_view(["POST"])
 @permission_classes([IsCustomerPermission])
 def create_feedback_on_executor(request):

@@ -1,4 +1,5 @@
 from django.db import transaction
+from django.db.models import Q
 from rest_framework import status, permissions
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
@@ -11,9 +12,22 @@ from .permissions import IsExecutorPermission, IsCustomerPermission
 
 @api_view(['GET'])
 def list_orders_view(request):
-    orders = Order.objects.filter(status='новый') # Фильтруем заказы по статусу "новый"
+    title_param = request.query_params.get("title", '')
+    skill_param = request.query_params.get("skill", '')
+    skills_list = [skill.strip() for skill in skill_param.split(',')] if skill_param else []
+    payment_method_param = request.query_params.get("payment_method", '')
+
+    orders = Order.objects.all()
+
+    if title_param:
+        orders = orders.filter(Q(title__icontains=title_param))
+    if skills_list:
+        for skill in skills_list:
+            orders = orders.filter(skill__name__icontains=skill)
+    if payment_method_param:
+        orders = orders.filter(Q(payment_method__icontains=payment_method_param))
     serializer = OrderListSerializer(orders, many=True)
-    return Response(serializer.data)
+    return Response(data=serializer.data, status=status.HTTP_200_OK)
 
 @api_view(['GET'])
 def order_detail_view(request, order_id):
