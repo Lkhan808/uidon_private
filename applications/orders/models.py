@@ -35,9 +35,9 @@ class OrderResponse(models.Model):
     completed = models.BooleanField(default=False)
     response_date = models.DateTimeField(auto_now_add=True)
 
-
     def __str__(self):
         return f"Ordering: {self.order} - Executor: {self.executor}"
+
 
 class FavoriteOrder(models.Model):
     executor = models.ForeignKey(ExecutorProfile, on_delete=models.CASCADE)

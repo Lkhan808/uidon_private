@@ -1,4 +1,5 @@
 from django.core.exceptions import ObjectDoesNotExist
+from django.db.models import Q
 from rest_framework import status, permissions
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.request import Request
@@ -15,11 +16,26 @@ from applications.profiles.serializers import (
 
 
 @api_view(["GET"])
-def executor_list_view(request):
-    """ Список фрилансеров """
+def executor_list_view(request: Request):
+    profession_param = request.query_params.get('profession', '')
+    skills_param = request.query_params.get('skills', '')
+    skills_list = [skill.strip() for skill in skills_param.split(',')] if skills_param else []# Получить параметр запроса "skills" как список
+    salary_type_param = request.query_params.get('salary_method', '')  # Получить параметр запроса "salary_method"
+
+    # Создаем начальный queryset без фильтрации
     executors = ExecutorProfile.objects.all()
+
+    # Применяем фильтрацию для каждого из параметров
+    if profession_param:
+        executors = executors.filter(Q(profession__icontains=profession_param))
+    if skills_list:
+        for skill in skills_list:
+            executors = executors.filter(skills__name__icontains=skill)
+    if salary_type_param:
+        executors = executors.filter(Q(salary_method__icontains=salary_type_param))
     serializer = ExecutorListSerializer(executors, many=True)
     return Response(data=serializer.data, status=status.HTTP_200_OK)
+
 
 @api_view(["GET"])
 def executor_detail_view(request: Request, pk):
@@ -139,6 +155,7 @@ def my_profile_view(request):
         return Response({"message": "Профиль не найден"}, status=400)
 
     return Response(serializer.data, status=200)
+
 
 
 
