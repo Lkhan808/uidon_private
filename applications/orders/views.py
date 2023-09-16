@@ -5,7 +5,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from .models import Order, OrderResponse, FavoriteOrder
 from .serializers import OrderSerializer, OrderResponseSerializer, OrderListSerializer
-from applications.profiles.models import ExecutorProfile
+from applications.profiles.models import ExecutorProfile, CustomerProfile
 from .permissions import IsExecutorPermission, IsCustomerPermission
 
 
@@ -40,6 +40,7 @@ def create_order_view(request):
             # Устанавливаем текущего пользователя как заказчика
             serializer.validated_data['customer'] = user.customer_profile
             order = Order(**serializer.validated_data)
+            CustomerProfile.order_count += 1
             order.save()
             order.skill.set(skill)
 
@@ -66,6 +67,7 @@ def update_or_delete_order_view(request, order_id):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     elif request.method == 'DELETE':
+        CustomerProfile.order_count -= 1
         order.delete()
         return Response({'message': 'Заказ успешно удален'}, status=status.HTTP_204_NO_CONTENT)
 
@@ -248,6 +250,7 @@ def close_order_view(request):
     try:
         order = Order.objects.get(pk=order_id, executor=executor_profile, status='в работе')
         order.status = 'закрыт'
+        ExecutorProfile.completed_order += 1
         order.save()
 
         order_responses = OrderResponse.objects.filter(order=order, executor=executor_profile)
@@ -277,6 +280,7 @@ def add_to_favorite_view(request):
 
     favorite, created = FavoriteOrder.objects.get_or_create(executor=user.executor_profile, order=order)
     if created:
+        ExecutorProfile.favorite_count += 1
         return Response({'message': 'Заказ успешно добавлен в избранное'}, status=status.HTTP_201_CREATED)
     else:
         return Response({'message': 'Заказ уже находится в избранном'}, status=status.HTTP_400_BAD_REQUEST)
@@ -293,6 +297,7 @@ def remove_from_favorite_view(request):
 
     try:
         favorite = FavoriteOrder.objects.get(executor=user.executor_profile, order=order)
+        ExecutorProfile.favorite_count -= 1
         favorite.delete()
         return Response({'message': 'Заказ успешно удален из избранного'}, status=status.HTTP_204_NO_CONTENT)
     except FavoriteOrder.DoesNotExist:

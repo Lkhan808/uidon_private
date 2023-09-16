@@ -67,6 +67,7 @@ class ExecutorProfile(BaseProfile):
     skills = models.ManyToManyField(Skill)
     view_count = models.PositiveIntegerField(default=0)
     favorite_count = models.PositiveIntegerField(default=0)
+    completed_order = models.PositiveIntegerField(default=0)
     user = models.OneToOneField(
         User,
         on_delete=models.CASCADE,
