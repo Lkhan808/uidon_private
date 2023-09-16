@@ -25,5 +25,4 @@ urlpatterns = [
     path('change-email/', change_email_view, name='change-email'),
 
     path('google-callback/', google_login, name='google-auth')
-]
-
+    ]

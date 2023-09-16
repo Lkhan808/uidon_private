@@ -28,3 +28,7 @@ class IsCustomerPermission(permissions.BasePermission):
 class IsExecutorPermission(permissions.BasePermission):
     def has_permission(self, request, view):
         return hasattr(request.user, 'executor_profile')
+
+
+def addcwe():
+    pass
