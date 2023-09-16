@@ -7,13 +7,14 @@ from applications.profiles.models import ExecutorProfile, CustomerProfile, Profi
 from applications.profiles.serializers import ExecutorSerializer, CustomerSerializer, ExecutorProfileSerializer
 
 
-@api_view(["GET", "POST"])
+@api_view(["GET"])
 def executors_list_view(request: Request):
     """ Создание или список фрилансеров """
     if request.method == "GET":
         profession_param = request.query_params.get('profession', '')
-        skills_param = request.query_params.getlist('skills', [])  # Получить параметр запроса "skills" как список
-        salary_type_param = request.query_params.get('salary_method', '')  # Получить параметр запроса "salary_method"
+        skills_param = request.query_params.getlist('skills', '').split(',')
+        skills_list = [skill.strip() for skill in skills_param.split(',')] if skills_param else []
+        salary_type_param = request.query_params.get('salary_method', '')
 
         # Создаем начальный queryset без фильтрации
         executors = ExecutorProfile.objects.all()
@@ -21,11 +22,9 @@ def executors_list_view(request: Request):
         # Применяем фильтрацию для каждого из параметров
         if profession_param:
             executors = executors.filter(Q(profession__icontains=profession_param))
-        if skills_param:
-            skills_filter = Q()
-            for skill in skills_param:
-                skills_filter |= Q(skills__name__icontains=skill)
-            executors = executors.filter(skills_filter)
+        if skills_list:
+            for skill in skills_list:
+                executors = executors.filter(skills__name__icontains=skill)
         if salary_type_param:
             executors = executors.filter(Q(salary_method__icontains=salary_type_param))
         serializer = ExecutorSerializer(executors, many=True)
@@ -46,7 +45,7 @@ def executor_detail_view(request: Request, pk):
     profile_user = executor_profile.user
     if request.method == 'GET':
         if current_user.role == 'customer':
-        # Проверить, является ли текущий пользователь автором профиля
+            # Проверить, является ли текущий пользователь автором профиля
             is_owner = current_user == profile_user
 
             # Проверить, был ли профиль уже просмотрен текущим пользователем
