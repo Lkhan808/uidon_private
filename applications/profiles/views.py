@@ -126,15 +126,16 @@ def customer_create_view(request):
 @api_view(["DELETE", "PATCH"])
 @permission_classes([IsCustomerPermission])
 def customer_path_delete_view(request: Request, pk):
-    customer = CustomerProfile.objects.get(pk=pk)
+    """ Удаление и частичное изменение заказчика """
+    customer_profile = CustomerProfile.objects.get(pk=pk)
 
     if request.method == "PATCH":
-        serializer = CustomerCRUDSerializer(data=request.data)
+        serializer = CustomerCRUDSerializer(customer_profile, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(data=serializer.data, status=status.HTTP_200_OK)
     else:
-        customer.delete()
+        customer_profile.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 

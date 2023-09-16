@@ -219,10 +219,10 @@ def executor_assigned_view(request):
 
     assigned_orders_data = []
     for order_response in orders_assigned:
-        assigned_order_data = OrderSerializer(order_response.order).data
+        assigned_order_data = OrderListSerializer(order_response.order).data
         assigned_orders_data.append(assigned_order_data)
 
-    return Response({'assigned_orders': assigned_orders_data})
+    return Response(assigned_orders_data)
 
 @api_view(['GET'])
 @permission_classes([IsExecutorPermission])
@@ -233,10 +233,10 @@ def executor_completed_view(request):
 
     completed_orders_data = []
     for order_response in orders_completed:
-        completed_order_data = OrderSerializer(order_response.order).data
+        completed_order_data = OrderListSerializer(order_response.order).data
         completed_orders_data.append(completed_order_data)
 
-    return Response({'completed_orders': completed_orders_data})
+    return Response(completed_orders_data)
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -250,10 +250,10 @@ def executor_responses_view(request):
     # Создайте список заказов, на которые откликнулся исполнитель
     orders_data = []
     for response in responses:
-        order_data = OrderSerializer(response.order).data
+        order_data = OrderListSerializer(response.order).data
         orders_data.append(order_data)
 
-    return Response({'executor_responses': orders_data})
+    return Response(orders_data)
 
 @api_view(['PATCH'])
 @permission_classes([IsExecutorPermission])
@@ -335,6 +335,6 @@ def executor_favorite_view(request):
     favorite_order_ids = favorite_orders.values_list('order_id', flat=True)
 
     orders = Order.objects.filter(id__in=favorite_order_ids)
-    serializer = OrderSerializer(orders, many=True)
+    serializer = OrderListSerializer(orders, many=True)
 
     return Response(serializer.data)
