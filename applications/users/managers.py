@@ -37,3 +37,4 @@ class UserManager(BaseUserManager):
         "O" or letters and digits that look similar -- just to avoid confusion.
         """
         return get_random_string(length, allowed_chars)
+
