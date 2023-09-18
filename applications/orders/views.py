@@ -17,7 +17,7 @@ def list_orders_view(request):
     skills_list = [skill.strip() for skill in skill_param.split(',')] if skill_param else []
     payment_method_param = request.query_params.get("payment_method", '')
 
-    orders = Order.objects.all()
+    orders = Order.objects.filter(status='новый')
 
     if title_param:
         orders = orders.filter(Q(title__icontains=title_param))
