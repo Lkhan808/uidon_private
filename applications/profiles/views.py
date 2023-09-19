@@ -1,6 +1,7 @@
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Q
 from django.http import QueryDict
+from requests import JSONDecodeError
 from rest_framework import status, permissions
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.request import Request
@@ -88,54 +89,17 @@ def executor_create_view(request):
 @permission_classes([IsExecutorPermission])
 def executor_path_delete_view(request: Request, pk):
     """ Удаление и частичное изменение фрилансера """
-
-    # Получаем профиль исполнителя по его ID (primary key)
     executor_profile = ExecutorProfile.objects.get(pk=pk)
 
-    # Определяем тип содержимого запроса (например, application/json или application/x-www-form-urlencoded)
-    content_type = request.content_type
-
-    # Если тип данных - application/json или другой неформатированный вид данных
-    if 'json' in content_type or 'text' in content_type:
-        # Извлекаем данные из тела запроса и получаем список навыков
-        data = json.loads(request.body)
-        skills_list = data.get('skills', [])
-
-    # Если тип данных - application/x-www-form-urlencoded
-    elif 'form' in content_type:
-        # Извлекаем данные из запроса и получаем список навыков
-        skills_list = request.data.get('skills', [])
-
-    else:
-        # Если тип данных не поддерживается, возвращаем ошибку
-        return Response({'error': 'Unsupported Content-Type'}, status=status.HTTP_400_BAD_REQUEST)
-
-    # Проверяем, является ли список навыков строкой и преобразуем в список целых чисел
-    if isinstance(skills_list, str):
-        skills_list = [int(skill) for skill in skills_list.split(',') if skill.strip()]
-
-    # Проверяем, что skills_list является списком
-    elif not isinstance(skills_list, list):
-        return Response({'error': 'Invalid skills data'}, status=status.HTTP_400_BAD_REQUEST)
-
-    # Создаем изменяемую копию данных запроса
-    mutable_request_data = QueryDict('', mutable=True)
-    mutable_request_data.update(request.data)
-
-    # Заменяем список навыков в данных запроса
-    mutable_request_data.setlist('skills', skills_list)
-
-    # Обработка PATCH-запроса: обновляем профиль исполнителя с обновленными данными
     if request.method == "PATCH":
-        serializer = ExecutorCRUDSerializer(executor_profile, data=mutable_request_data, partial=True)
+        serializer = ExecutorCRUDSerializer(executor_profile, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(data=serializer.data, status=status.HTTP_200_OK)
-
-    # Обработка DELETE-запроса: удаляем профиль исполнителя
     else:
         executor_profile.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
 
 
 @api_view(["GET"])
