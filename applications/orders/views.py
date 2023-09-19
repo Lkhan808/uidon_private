@@ -1,3 +1,5 @@
+import json
+
 from django.db import transaction
 from django.db.models import Q
 from rest_framework import status, permissions
@@ -36,7 +38,7 @@ def order_detail_view(request, order_id):
     except Order.DoesNotExist:
         return Response({'error': 'Заказ не найден'}, status=status.HTTP_404_NOT_FOUND)
 
-    serializer = OrderSerializer(order)
+    serializer = OrderListSerializer(order)
     return Response(serializer.data)
 
 @api_view(['POST'])
@@ -71,6 +73,7 @@ def create_order_view(request):
 @permission_classes([IsCustomerPermission])
 def update_or_delete_order_view(request, order_id):
     customer_profile = request.user.customer_profile
+
     try:
         order = Order.objects.get(pk=order_id)
     except Order.DoesNotExist:
@@ -95,7 +98,7 @@ def update_or_delete_order_view(request, order_id):
 @permission_classes([IsCustomerPermission])
 def customer_order_all_list_view(request):
     customer_all_orders = Order.objects.filter(customer=request.user.customer_profile)
-    serializer = OrderSerializer(customer_all_orders, many=True)
+    serializer = OrderListSerializer(customer_all_orders, many=True)
 
     return Response(serializer.data)
 
@@ -103,7 +106,7 @@ def customer_order_all_list_view(request):
 @permission_classes([IsCustomerPermission])
 def customer_order_active_list_view(request):
     customer_active_orders = Order.objects.filter(customer=request.user.customer_profile, status='новый')
-    serializer = OrderSerializer(customer_active_orders, many=True)
+    serializer = OrderListSerializer(customer_active_orders, many=True)
 
     return Response(serializer.data)
 
@@ -113,7 +116,7 @@ def customer_order_active_list_view(request):
 def customer_order_close_list_view(request):
 
     customer_close_orders = Order.objects.filter(customer=request.user.customer_profile, status='закрыт')
-    serializer = OrderSerializer(customer_close_orders, many=True)
+    serializer = OrderListSerializer(customer_close_orders, many=True)
 
     return Response(serializer.data)
 
@@ -122,7 +125,7 @@ def customer_order_close_list_view(request):
 def customer_order_progress_list_view(request):
 
     customer_progress_orders = Order.objects.filter(customer=request.user.customer_profile, status='в работе')
-    serializer = OrderSerializer(customer_progress_orders, many=True)
+    serializer = OrderListSerializer(customer_progress_orders, many=True)
 
     return Response(serializer.data)
 
@@ -130,7 +133,7 @@ def customer_order_progress_list_view(request):
 @permission_classes([IsCustomerPermission])
 def customer_order_without_responses_view(request):
     customer_without_responses_orders = Order.objects.filter(customer=request.user.customer_profile, response_count=0)
-    serializer = OrderSerializer(customer_without_responses_orders, many=True)
+    serializer = OrderListSerializer(customer_without_responses_orders, many=True)
 
     return Response(serializer.data)
 

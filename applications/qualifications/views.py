@@ -60,8 +60,9 @@ def language_list_create_view(request):
 
 @api_view(["GET", "PUT", "DELETE"])
 @permission_classes([permissions.IsAuthenticated])
-def language_detail_view(request, pk):
-    language = Language.objects.get(pk=pk)
+def language_detail_view(request):
+    language_id = request.data.get('id')
+    language = Language.objects.get(pk=language_id)
     if request.method == "GET":
         serializer = LanguageSerializer(language)
         return Response(serializer.data, status=status.HTTP_200_OK)
@@ -96,8 +97,9 @@ def contact_list_create_view(request):
 
 @api_view(["GET", "PUT", "DELETE"])
 @permission_classes([permissions.IsAuthenticated])
-def contact_detail_view(request, pk):
-    contact = Contact.objects.get(pk=pk)
+def contact_detail_view(request):
+    contact_id = request.data.get('id')
+    contact = Contact.objects.get(pk=contact_id)
 
     if request.method == "GET":
         serializer = ContactSerializer(contact)
@@ -133,8 +135,9 @@ def portfolio_list_create_view(request):
 
 @api_view(["GET", "PUT", "DELETE"])
 @permission_classes([permissions.IsAuthenticated])
-def portfolio_detail_view(request, pk):
-    portfolio = Portfolio.objects.get(pk=pk)
+def portfolio_detail_view(request):
+    portfolio_id = request.data.get('id')
+    portfolio = Portfolio.objects.get(pk=portfolio_id)
 
     if request.method == "GET":
         serializer = PortfolioSerializer(portfolio)
