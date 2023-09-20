@@ -2,7 +2,7 @@ from decouple import config as env
 
 DEBUG = env('DEBUG', cast=bool)
 
-ALLOWED_HOSTS = env('ALLOWED_HOSTS', default='0.0.0.0').split()
+ALLOWED_HOSTS = ['127.0.0.1']
 
 DATABASES = {
     'default': {
