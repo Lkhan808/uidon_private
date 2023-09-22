@@ -179,7 +179,7 @@ def google_login(request):
 
             # Включите токены в URL для перенаправления
         jwt_tokens = generate_jwt_for_user(user)
-        redirect_url = f'http://localhost:8003/?access_token={jwt_tokens["access"]}&refresh_token={jwt_tokens["refresh"]}&role={user.role}/'
+        redirect_url = f'https://uidon.geeks.kg/?access_token={jwt_tokens["access"]}&refresh_token={jwt_tokens["refresh"]}&role={user.role}/'
         return HttpResponseRedirect(redirect_url)
 
     # Если не выполнилось условие request.method == 'GET'
