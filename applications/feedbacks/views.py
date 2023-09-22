@@ -6,8 +6,6 @@ from .permissions import IsCustomerPermission, IsExecutorPermission
 from .models import FeedbackOnCustomer, FeedbackOnExecutor
 
 
-
-
 @api_view(["POST"])
 @permission_classes([IsCustomerPermission])
 def create_feedback_on_executor(request):
@@ -18,6 +16,7 @@ def create_feedback_on_executor(request):
     serializer.is_valid(raise_exception=True)
     serializer.save()
     return Response(serializer.data, status=status.HTTP_201_CREATED)
+
 
 @api_view(["POST"])
 @permission_classes([IsExecutorPermission])

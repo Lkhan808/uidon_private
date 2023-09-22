@@ -68,7 +68,6 @@ def create_order_view(request):
         # Если пользователь не является заказчиком, возвращаем ошибку
         return Response({'error': 'Вы не являетесь заказчиком и не можете создавать заказы'}, status=status.HTTP_403_FORBIDDEN)
 
-
 @api_view(['PATCH', 'DELETE'])
 @permission_classes([IsCustomerPermission])
 def update_or_delete_order_view(request, order_id):
@@ -92,8 +91,6 @@ def update_or_delete_order_view(request, order_id):
         order.delete()
         return Response({'message': 'Заказ успешно удален'}, status=status.HTTP_204_NO_CONTENT)
 
-
-
 @api_view(['GET'])
 @permission_classes([IsCustomerPermission])
 def customer_order_all_list_view(request):
@@ -109,7 +106,6 @@ def customer_order_active_list_view(request):
     serializer = OrderListSerializer(customer_active_orders, many=True)
 
     return Response(serializer.data)
-
 
 @api_view(['GET'])
 @permission_classes([IsCustomerPermission])
@@ -136,9 +132,6 @@ def customer_order_without_responses_view(request):
     serializer = OrderListSerializer(customer_without_responses_orders, many=True)
 
     return Response(serializer.data)
-
-
-
 
 @api_view(['POST'])
 @permission_classes([IsExecutorPermission])
@@ -173,9 +166,6 @@ def create_order_response_view(request):
 
     return Response({'message': 'Отклик успешно создан'}, status=status.HTTP_201_CREATED)
 
-
-
-
 @api_view(['GET'])
 @permission_classes([IsCustomerPermission])
 def list_responses_for_order_view(request, order_id):
@@ -183,8 +173,6 @@ def list_responses_for_order_view(request, order_id):
     responses = order.orderings.all()
     serializer = OrderResponseSerializer(responses, many=True)
     return Response(serializer.data)
-
-
 
 @api_view(['PUT'])
 @permission_classes([IsCustomerPermission])
@@ -211,7 +199,6 @@ def assign_executor_to_order_view(request, order_id):
     OrderResponse.objects.filter(order=order).update(attached=True)
 
     return Response({'message': 'Исполнитель назначен на заказ'}, status=status.HTTP_200_OK)
-
 
 @api_view(['GET'])
 @permission_classes([IsExecutorPermission])
@@ -286,7 +273,6 @@ def close_order_view(request):
     except Order.DoesNotExist:
         return Response({'message': 'Заказ не найден или не может быть закрыт'}, status=status.HTTP_400_BAD_REQUEST)
 
-
 @api_view(['POST'])
 @permission_classes([IsExecutorPermission])
 def add_to_favorite_view(request):
@@ -328,7 +314,6 @@ def remove_from_favorite_view(request):
         return Response({'message': 'Заказ успешно удален из избранного'}, status=status.HTTP_204_NO_CONTENT)
     except FavoriteOrder.DoesNotExist:
         return Response({'message': 'Заказ не находится в избранном'}, status=status.HTTP_400_BAD_REQUEST)
-
 
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated])
