@@ -10,7 +10,8 @@ from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
 
 def send_mail_for_user(user: User, jwt):
     subject = 'Подтвердите свой EMAIL'
-    message = (f'Перейдите по ссылке для подтверждения своего аккаунта:'
+    message = (f' Здравствуйтe, благодарим вас за присоединение к нашей платформе UIDON.'
+               f'\nДля того чтобы завершить регистрацию вам необходимо подтвердить вашу электронную почту'
                f'\n{base.MAIL_URL}api/auth/verify-email/{user.id}/{jwt["access"]}/')
     from_email = base.EMAIL_HOST_USER
     recipient_list = [user.email]

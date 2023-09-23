@@ -12,7 +12,7 @@ from applications.users.serializers import SignUpSerializer, SignInSerializer, U
     ChangePassswordSerializer
 
 from applications.users.services import UserService
-from django.contrib.auth import authenticate
+from django.contrib.auth import authenticate, logout
 from applications.users.utils import generate_jwt_for_user
 from rest_framework.decorators import api_view, permission_classes
 
@@ -186,3 +186,12 @@ def google_login(request):
     jwt_tokens = generate_jwt_for_user(user)
     redirect_url = f'http://localhost:8003/?access_token={jwt_tokens["access"]}&refresh_token={jwt_tokens["refresh"]}'
     return HttpResponseRedirect(redirect_url)
+
+
+@api_view(['POST'])
+@permission_classes([permissions.IsAuthenticated])
+def logout_view(request):
+    if request.method == 'POST':
+        redirect_uri = 'https://uidon.geeks.kg/'
+        logout(request)
+        return HttpResponseRedirect(redirect_uri)
