@@ -77,7 +77,6 @@ class ExecutorProfile(BaseProfile):
     class Meta:
         db_table = 'executors'
 
-
     def get_average_rating(self):
         # Получаем средний рейтинг
         average_rating = self.feedbacks_on_executor.aggregate(Avg('rating'))['rating__avg'] or 0

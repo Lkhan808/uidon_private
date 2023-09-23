@@ -175,14 +175,13 @@ def google_login(request):
 
             # Включите токены в URL для перенаправления
         jwt_tokens = generate_jwt_for_user(user)
-        redirect_url = f'http://localhost:8003/?access_token={jwt_tokens["access"]}&refresh_token={jwt_tokens["refresh"]}&role={user.role}/'
+        redirect_url = f'https://uidon.geeks.kg/?access_token={jwt_tokens["access"]}&refresh_token={jwt_tokens["refresh"]}&role={user.role}/'
         return HttpResponseRedirect(redirect_url)
 
     # Если не выполнилось условие request.method == 'GET'
     return Response(
         data={"message": "Invalid request method"},
-        status=status.HTTP_405_METHOD_NOT_ALLOWED,
-    )
+        status=status.HTTP_405_METHOD_NOT_ALLOWED)
     jwt_tokens = generate_jwt_for_user(user)
     redirect_url = f'http://localhost:8003/?access_token={jwt_tokens["access"]}&refresh_token={jwt_tokens["refresh"]}'
     return HttpResponseRedirect(redirect_url)
@@ -195,3 +194,4 @@ def logout_view(request):
         redirect_uri = 'https://uidon.geeks.kg/'
         logout(request)
         return HttpResponseRedirect(redirect_uri)
+

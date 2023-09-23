@@ -17,6 +17,7 @@ def create_feedback_on_executor(request):
     serializer.save()
     return Response(serializer.data, status=status.HTTP_201_CREATED)
 
+
 @api_view(["POST"])
 @permission_classes([IsExecutorPermission])
 def create_feedback_on_customer(request):

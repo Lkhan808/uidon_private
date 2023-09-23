@@ -1,9 +1,13 @@
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Q
+from django.http import QueryDict
+from requests import JSONDecodeError
 from rest_framework import status, permissions
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.request import Request
 from rest_framework.response import Response
+from rest_framework.utils import json
+
 from applications.profiles.models import ExecutorProfile, CustomerProfile, ProfileView
 from .permissions import IsCustomerPermission, IsExecutorPermission
 from applications.profiles.serializers import (
@@ -80,6 +84,7 @@ def executor_create_view(request):
     serializer.save()
     return Response(data=serializer.data, status=status.HTTP_201_CREATED)
 
+
 @api_view(["DELETE", "PATCH"])
 @permission_classes([IsExecutorPermission])
 def executor_path_delete_view(request: Request, pk):
@@ -123,18 +128,19 @@ def customer_create_view(request):
     serializer.save()
     return Response(data=serializer.data, status=status.HTTP_201_CREATED)
 
-@api_view(["DELETE", "PUT"])
+@api_view(["DELETE", "PATCH"])
 @permission_classes([IsCustomerPermission])
 def customer_path_delete_view(request: Request, pk):
-    customer = CustomerProfile.objects.get(pk=pk)
+    """ Удаление и частичное изменение заказчика """
+    customer_profile = CustomerProfile.objects.get(pk=pk)
 
-    if request.method == "PUT":
-        serializer = CustomerCRUDSerializer(data=request.data)
+    if request.method == "PATCH":
+        serializer = CustomerCRUDSerializer(customer_profile, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(data=serializer.data, status=status.HTTP_200_OK)
     else:
-        customer.delete()
+        customer_profile.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
