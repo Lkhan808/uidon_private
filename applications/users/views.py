@@ -195,3 +195,4 @@ def logout_view(request):
         logout(request)
         return HttpResponseRedirect(redirect_uri)
 
+
